@@ -1,0 +1,233 @@
+<div class="min-h-screen bg-gray-50 flex">
+    <!-- Toast Notification -->
+    @if (toast().visible) {
+    <div @toastSlide
+        class="fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-2">
+        <lucide-icon [img]="Save" class="w-5 h-5"></lucide-icon>
+        <span>{{ toast().message }}</span>
+    </div>
+    }
+
+    <!-- Sidebar - Desktop -->
+    <aside class="hidden lg:flex flex-col w-64 bg-white border-r border-gray-200 fixed h-full">
+        <div class="p-6 border-b border-gray-100">
+            <a routerLink="/" class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+                    <lucide-icon [img]="Briefcase" class="w-5 h-5 text-white"></lucide-icon>
+                </div>
+                <span class="text-xl font-bold text-gray-900">JobPortal</span>
+            </a>
+        </div>
+
+        <nav class="flex-1 p-4">
+            <ul class="space-y-2">
+                @for (item of navItems; track item.label) {
+                <li>
+                    <a [routerLink]="item.route" routerLinkActive="bg-blue-50 text-blue-600 border-blue-200"
+                        [routerLinkActiveOptions]="{ exact: true }"
+                        class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 transition-all border border-transparent">
+                        <lucide-icon [img]="item.icon" class="w-5 h-5"></lucide-icon>
+                        <span class="font-medium">{{ item.label }}</span>
+                    </a>
+                </li>
+                }
+            </ul>
+        </nav>
+
+        <div class="p-4 border-t border-gray-100">
+            <button
+                class="flex items-center gap-3 px-4 py-3 w-full text-red-500 hover:bg-red-50 rounded-xl transition-all">
+                <lucide-icon [img]="LogOut" class="w-5 h-5"></lucide-icon>
+                <span class="font-medium">Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Mobile Sidebar Overlay -->
+    @if (isMobileMenuOpen()) {
+    <div class="lg:hidden fixed inset-0 bg-black/50 z-40" (click)="closeMobileMenu()"></div>
+    }
+
+    <!-- Mobile Sidebar -->
+    @if (isMobileMenuOpen()) {
+    <aside @sidebarSlide class="lg:hidden fixed left-0 top-0 h-full w-64 bg-white z-50 shadow-xl">
+        <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+            <a routerLink="/" class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+                    <lucide-icon [img]="Briefcase" class="w-5 h-5 text-white"></lucide-icon>
+                </div>
+                <span class="text-xl font-bold text-gray-900">JobPortal</span>
+            </a>
+            <button (click)="closeMobileMenu()" class="p-2 hover:bg-gray-100 rounded-lg">
+                <lucide-icon [img]="X" class="w-5 h-5 text-gray-600"></lucide-icon>
+            </button>
+        </div>
+
+        <nav class="flex-1 p-4">
+            <ul class="space-y-2">
+                @for (item of navItems; track item.label) {
+                <li>
+                    <a [routerLink]="item.route" (click)="closeMobileMenu()"
+                        routerLinkActive="bg-blue-50 text-blue-600 border-blue-200"
+                        [routerLinkActiveOptions]="{ exact: true }"
+                        class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 transition-all border border-transparent">
+                        <lucide-icon [img]="item.icon" class="w-5 h-5"></lucide-icon>
+                        <span class="font-medium">{{ item.label }}</span>
+                    </a>
+                </li>
+                }
+            </ul>
+        </nav>
+
+        <div class="p-4 border-t border-gray-100">
+            <button
+                class="flex items-center gap-3 px-4 py-3 w-full text-red-500 hover:bg-red-50 rounded-xl transition-all">
+                <lucide-icon [img]="LogOut" class="w-5 h-5"></lucide-icon>
+                <span class="font-medium">Logout</span>
+            </button>
+        </div>
+    </aside>
+    }
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-64">
+        <!-- Top Header -->
+        <header
+            class="bg-white border-b border-gray-200 px-4 lg:px-8 py-4 flex items-center justify-between sticky top-0 z-10">
+            <div class="flex items-center gap-4">
+                <!-- Mobile Menu Button -->
+                <button (click)="toggleMobileMenu()" class="p-2 hover:bg-gray-100 rounded-lg lg:hidden">
+                    <lucide-icon [img]="Menu" class="w-6 h-6 text-gray-600"></lucide-icon>
+                </button>
+                <div class="flex items-center gap-3">
+                    <a routerLink="/employer-dashbord" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                        <lucide-icon [img]="ArrowLeft" class="w-5 h-5 text-gray-600"></lucide-icon>
+                    </a>
+                    <div>
+                        <h1 class="text-xl lg:text-2xl font-bold text-gray-900">Edit Profile</h1>
+                        <p class="text-gray-500 text-sm hidden sm:block">Update your personal information</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <!-- Messages Icon -->
+                <a routerLink="/employer-dashbord/messages"
+                    class="relative p-2 hover:bg-gray-100 rounded-lg transition-colors" title="Messages">
+                    <lucide-icon [img]="Mail" class="w-5 h-5 text-gray-600"></lucide-icon>
+                    <span class="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full"></span>
+                </a>
+
+                <!-- Profile Section -->
+                <div class="flex items-center gap-3 px-2 py-1">
+                    <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center overflow-hidden">
+                        @if (user().avatar) {
+                        <img [src]="user().avatar" alt="Profile" class="w-full h-full object-cover" />
+                        } @else {
+                        <span class="text-white font-medium text-sm">{{ user().name.charAt(0) }}</span>
+                        }
+                    </div>
+                    <div class="text-right hidden sm:block">
+                        <p class="font-medium text-gray-900 text-sm">{{ user().name }}</p>
+                        <p class="text-gray-500 text-xs">{{ user().email }}</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Profile Content -->
+        <div class="p-4 lg:p-8">
+            <div @fadeInUp class="max-w-2xl mx-auto">
+                <!-- Avatar Section -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-6">Profile Photo</h2>
+                    <div class="flex items-center gap-6">
+                        <div class="relative">
+                            <div
+                                class="w-24 h-24 rounded-full bg-blue-500 flex items-center justify-center overflow-hidden">
+                                @if (user().avatar) {
+                                <img [src]="user().avatar" alt="Profile" class="w-full h-full object-cover" />
+                                } @else {
+                                <span class="text-white font-bold text-3xl">{{ user().name.charAt(0) }}</span>
+                                }
+                            </div>
+                            <label
+                                class="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-700 transition-colors shadow-lg">
+                                <lucide-icon [img]="Camera" class="w-4 h-4 text-white"></lucide-icon>
+                                <input type="file" accept="image/*" (change)="onAvatarChange($event)" class="hidden" />
+                            </label>
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-900">{{ user().name }}</p>
+                            <p class="text-sm text-gray-500">{{ user().role }}</p>
+                            <p class="text-xs text-gray-400 mt-2">Click the camera icon to upload a new photo</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Personal Information -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-6">Personal Information</h2>
+                    <div class="space-y-5">
+                        <!-- Name -->
+                        <div>
+                            <label class="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                                <lucide-icon [img]="User" class="w-4 h-4"></lucide-icon>
+                                Full Name
+                            </label>
+                            <input type="text" [value]="editName()" (input)="editName.set($any($event.target).value)"
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                placeholder="Enter your full name" />
+                        </div>
+
+                        <!-- Email -->
+                        <div>
+                            <label class="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                                <lucide-icon [img]="Mail" class="w-4 h-4"></lucide-icon>
+                                Email Address
+                            </label>
+                            <input type="email" [value]="editEmail()" (input)="editEmail.set($any($event.target).value)"
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                placeholder="Enter your email" />
+                        </div>
+
+                        <!-- Phone -->
+                        <div>
+                            <label class="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                                <lucide-icon [img]="Phone" class="w-4 h-4"></lucide-icon>
+                                Phone Number
+                            </label>
+                            <input type="tel" [value]="editPhone()" (input)="editPhone.set($any($event.target).value)"
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                placeholder="Enter your phone number" />
+                        </div>
+
+                        <!-- Location -->
+                        <div>
+                            <label class="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                                <lucide-icon [img]="MapPin" class="w-4 h-4"></lucide-icon>
+                                Location
+                            </label>
+                            <input type="text" [value]="editLocation()"
+                                (input)="editLocation.set($any($event.target).value)"
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                placeholder="Enter your location" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <a routerLink="/employer-dashbord"
+                        class="flex-1 px-6 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-medium text-center">
+                        Cancel
+                    </a>
+                    <button (click)="saveProfile()"
+                        class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2">
+                        <lucide-icon [img]="Save" class="w-5 h-5"></lucide-icon>
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>

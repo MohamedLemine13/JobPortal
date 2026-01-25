@@ -1,0 +1,70 @@
+<section #analyticsSection class="pt-20 pb-40">
+    <div class="container mx-auto px-4">
+        <!-- Header -->
+        <div 
+            [@fadeInUp]="isVisible ? 'visible' : 'hidden'"
+            class="text-center max-w-3xl mx-auto mb-16"
+        >
+            <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+                Platform 
+                <span class="bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Analytics</span>
+            </h2>
+            <p class="text-lg text-gray-600 leading-relaxed">
+                Real-time insights and data-driven results that showcase the power of our platform in
+                connecting talent with opportunities.
+            </p>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+            @for (stat of stats; track stat.label; let i = $index) {
+                @if (isVisible) {
+                    <div 
+                        [@staggerFadeIn]="{ value: '', params: { delay: 200 + (i * 100) } }"
+                        class="bg-white rounded-2xl p-6 shadow-sm hover:shadow-xl transition-shadow duration-300 border border-gray-100"
+                    >
+                        <div class="flex items-start justify-between mb-4">
+                            <div 
+                                class="w-12 h-12 rounded-xl flex items-center justify-center"
+                                [ngClass]="{
+                                    'bg-blue-100': stat.color === 'blue',
+                                    'bg-purple-100': stat.color === 'purple',
+                                    'bg-green-100': stat.color === 'green',
+                                    'bg-pink-100': stat.color === 'pink'
+                                }"
+                            >
+                                <lucide-icon 
+                                    [img]="stat.icon" 
+                                    class="w-6 h-6"
+                                    [ngClass]="{
+                                        'text-blue-600': stat.color === 'blue',
+                                        'text-purple-600': stat.color === 'purple',
+                                        'text-green-600': stat.color === 'green',
+                                        'text-pink-600': stat.color === 'pink'
+                                    }"
+                                ></lucide-icon>
+                            </div>
+                            <span 
+                                class="text-sm font-medium"
+                                [ngClass]="{
+                                    'text-blue-600': stat.color === 'blue',
+                                    'text-purple-600': stat.color === 'purple',
+                                    'text-green-600': stat.color === 'green',
+                                    'text-pink-600': stat.color === 'pink'
+                                }"
+                            >
+                                {{ stat.growth }}
+                            </span>
+                        </div>
+                        <div class="text-3xl font-bold text-gray-900 mb-1">
+                            {{ stat.value }}
+                        </div>
+                        <div class="text-gray-500 text-sm">
+                            {{ stat.label }}
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</section>

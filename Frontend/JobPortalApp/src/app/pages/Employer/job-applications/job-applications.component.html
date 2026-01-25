@@ -1,0 +1,336 @@
+<div class="flex min-h-screen bg-gray-50">
+    <!-- Mobile Menu Overlay -->
+    @if (isMobileMenuOpen()) {
+    <div class="fixed inset-0 bg-black/50 z-40 lg:hidden" (click)="closeMobileMenu()"></div>
+    }
+
+    <!-- Sidebar - Hidden on mobile -->
+    <aside class="w-64 bg-white border-r border-gray-200 flex-col fixed h-full z-50 hidden lg:flex">
+        <!-- Logo -->
+        <div class="p-6 border-b border-gray-100">
+            <div class="flex items-center gap-3">
+                <div
+                    class="w-10 h-10 bg-linear-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-md shadow-blue-500/20">
+                    <lucide-icon [img]="Briefcase" class="w-5 h-5 text-white"></lucide-icon>
+                </div>
+                <span class="text-xl font-bold text-gray-900">JobPortal</span>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 p-4">
+            <ul class="space-y-2">
+                @for (item of navItems; track item.label) {
+                <li>
+                    <a [routerLink]="item.route" routerLinkActive="bg-blue-200 text-blue-600 border-blue-400"
+                        [routerLinkActiveOptions]="{ exact: true }"
+                        class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-100 transition-colors border border-transparent">
+                        <lucide-icon [img]="item.icon" class="w-5 h-5"></lucide-icon>
+                        <span class="font-medium">{{ item.label }}</span>
+                    </a>
+                </li>
+                }
+            </ul>
+        </nav>
+
+        <!-- Logout -->
+        <div class="p-4 border-t border-gray-100">
+            <button (click)="logout()"
+                class="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-white bg-red-500 hover:bg-red-600 transition-colors">
+                <lucide-icon [img]="LogOut" class="w-5 h-5"></lucide-icon>
+                <span class="font-medium">Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Mobile Sidebar -->
+    @if (isMobileMenuOpen()) {
+    <aside @sidebarSlide class="w-64 bg-white border-r border-gray-200 flex flex-col fixed h-full z-50 lg:hidden">
+        <!-- Logo -->
+        <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div
+                    class="w-10 h-10 bg-linear-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-md shadow-blue-500/20">
+                    <lucide-icon [img]="Briefcase" class="w-5 h-5 text-white"></lucide-icon>
+                </div>
+                <span class="text-xl font-bold text-gray-900">JobPortal</span>
+            </div>
+            <button (click)="closeMobileMenu()" class="p-2 hover:bg-gray-100 rounded-lg">
+                <lucide-icon [img]="X" class="w-5 h-5 text-gray-500"></lucide-icon>
+            </button>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 p-4">
+            <ul class="space-y-2">
+                @for (item of navItems; track item.label) {
+                <li>
+                    <a [routerLink]="item.route" routerLinkActive="bg-blue-200 text-blue-600 border-blue-400"
+                        [routerLinkActiveOptions]="{ exact: true }" (click)="closeMobileMenu()"
+                        class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-100 transition-colors border border-transparent">
+                        <lucide-icon [img]="item.icon" class="w-5 h-5"></lucide-icon>
+                        <span class="font-medium">{{ item.label }}</span>
+                    </a>
+                </li>
+                }
+            </ul>
+        </nav>
+
+        <!-- Logout -->
+        <div class="p-4 border-t border-gray-100">
+            <button (click)="logout()"
+                class="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-white bg-red-500 hover:bg-red-600 transition-colors">
+                <lucide-icon [img]="LogOut" class="w-5 h-5"></lucide-icon>
+                <span class="font-medium">Logout</span>
+            </button>
+        </div>
+    </aside>
+    }
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-64">
+        <!-- Top Header -->
+        <header
+            class="bg-white border-b border-gray-200 px-4 lg:px-8 py-4 flex items-center justify-between sticky top-0 z-10">
+            <div class="flex items-center gap-4">
+                <!-- Mobile Menu Button -->
+                <button (click)="toggleMobileMenu()" class="p-2 hover:bg-gray-100 rounded-lg lg:hidden">
+                    <lucide-icon [img]="Menu" class="w-6 h-6 text-gray-600"></lucide-icon>
+                </button>
+                <div>
+                    <h1 class="text-xl lg:text-2xl font-bold text-gray-900">Welcome back!</h1>
+                    <p class="text-gray-500 text-sm hidden sm:block">Here's what's happening with your jobs today.</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <!-- Messages Icon -->
+                <a routerLink="/employer-dashbord/messages"
+                    class="relative p-2 hover:bg-gray-100 rounded-lg transition-colors" title="Messages">
+                    <lucide-icon [img]="Mail" class="w-5 h-5 text-gray-600"></lucide-icon>
+                    <span class="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full"></span>
+                </a>
+
+                <!-- Profile Section -->
+                <div class="relative">
+                    <button (click)="toggleProfileDropdown()"
+                        class="flex items-center gap-3 px-2 py-1 hover:bg-gray-100 rounded-lg transition-colors">
+                        <div
+                            class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center overflow-hidden">
+                            @if (user().avatar) {
+                            <img [src]="user().avatar" alt="Profile" class="w-full h-full object-cover" />
+                            } @else {
+                            <span class="text-white font-medium text-sm">{{ user().name.charAt(0) }}</span>
+                            }
+                        </div>
+                        <div class="text-right hidden sm:block">
+                            <p class="font-medium text-gray-900 text-sm">{{ user().name }}</p>
+                            <p class="text-gray-500 text-xs">{{ user().email }}</p>
+                        </div>
+                        <lucide-icon [img]="ChevronDown" class="w-4 h-4 text-gray-400"></lucide-icon>
+                    </button>
+
+                    <!-- Profile Dropdown -->
+                    @if (isProfileDropdownOpen()) {
+                    <div
+                        class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-30">
+                        <a routerLink="/employer-dashbord/profile"
+                            class="w-full flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors">
+                            <lucide-icon [img]="Edit3" class="w-4 h-4"></lucide-icon>
+                            <span>Edit Profile</span>
+                        </a>
+                        <a routerLink="/employer-dashbord/messages"
+                            class="w-full flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors">
+                            <lucide-icon [img]="Mail" class="w-4 h-4"></lucide-icon>
+                            <span>Messages</span>
+                        </a>
+                    </div>
+                    }
+                </div>
+            </div>
+        </header>
+
+        <!-- Click outside to close dropdown -->
+        @if (isProfileDropdownOpen()) {
+        <div class="fixed inset-0 z-20" (click)="isProfileDropdownOpen.set(false)"></div>
+        }
+
+        <!-- Content -->
+        <div class="p-4 lg:p-8">
+            <div @fadeInUp>
+                <!-- Back Button & Title -->
+                <div class="flex items-center gap-4 mb-6">
+                    <button (click)="goBack()"
+                        class="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                        <lucide-icon [img]="ArrowLeft" class="w-5 h-5"></lucide-icon>
+                        <span class="font-medium">Back</span>
+                    </button>
+                    <h2 class="text-xl lg:text-2xl font-bold text-gray-900">Applications Overview</h2>
+                </div>
+
+                <!-- Job Details Card -->
+                <div class="bg-linear-to-r from-blue-600 to-blue-700 rounded-2xl p-6 mb-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-white mb-2">{{ jobDetails().title }}</h3>
+                            <div class="flex flex-wrap items-center gap-4 text-blue-100 text-sm">
+                                <div class="flex items-center gap-1">
+                                    <lucide-icon [img]="MapPin" class="w-4 h-4"></lucide-icon>
+                                    <span>{{ jobDetails().location }}</span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <lucide-icon [img]="Briefcase" class="w-4 h-4"></lucide-icon>
+                                    <span>{{ jobDetails().type }}</span>
+                                </div>
+                                <span>{{ jobDetails().category }}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 px-4 py-2 bg-white/20 rounded-xl text-white">
+                            <lucide-icon [img]="Users" class="w-5 h-5"></lucide-icon>
+                            <span class="font-semibold">{{ applicants().length }} Applications</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Applicants List -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    @for (applicant of applicants(); track applicant.id) {
+                    <div
+                        class="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-6 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors gap-4">
+                        <!-- Applicant Info -->
+                        <div class="flex items-center gap-4">
+                            <div
+                                class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0">
+                                @if (applicant.avatar) {
+                                <img [src]="applicant.avatar" alt="{{ applicant.name }}"
+                                    class="w-full h-full object-cover" />
+                                } @else {
+                                <span class="text-gray-600 font-semibold">{{ applicant.name.charAt(0) }}</span>
+                                }
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-900">{{ applicant.name }}</p>
+                                <p class="text-gray-500 text-sm">{{ applicant.email }}</p>
+                                <div class="flex items-center gap-1 text-gray-400 text-xs mt-1">
+                                    <lucide-icon [img]="Calendar" class="w-3 h-3"></lucide-icon>
+                                    <span>Applied {{ applicant.appliedDate }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="flex items-center gap-3 flex-wrap sm:flex-nowrap">
+                            <!-- Status Badge -->
+                            <span class="px-3 py-1.5 rounded-full text-xs font-medium"
+                                [ngClass]="getStatusColor(applicant.status)">
+                                {{ applicant.status }}
+                            </span>
+
+                            <!-- Resume Button -->
+                            <button (click)="downloadResume(applicant)"
+                                class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
+                                <lucide-icon [img]="Download" class="w-4 h-4"></lucide-icon>
+                                Resume
+                            </button>
+
+                            <!-- View Profile Button -->
+                            <button (click)="openApplicantModal(applicant)"
+                                class="flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium">
+                                <lucide-icon [img]="Eye" class="w-4 h-4"></lucide-icon>
+                                View Profile
+                            </button>
+                        </div>
+                    </div>
+                    }
+
+                    @if (applicants().length === 0) {
+                    <div class="p-12 text-center">
+                        <lucide-icon [img]="Users" class="w-12 h-12 text-gray-300 mx-auto mb-4"></lucide-icon>
+                        <p class="text-gray-500 font-medium">No applications yet</p>
+                        <p class="text-gray-400 text-sm">Applications will appear here when candidates apply</p>
+                    </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Applicant Profile Modal -->
+    @if (isModalOpen() && selectedApplicant()) {
+    <div @modalFade class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div @modalSlide class="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
+            (click)="$event.stopPropagation()">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between p-6 border-b border-gray-100">
+                <h3 class="text-lg font-bold text-gray-900">Applicant Profile</h3>
+                <button (click)="closeModal()" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                    <lucide-icon [img]="X" class="w-5 h-5 text-gray-500"></lucide-icon>
+                </button>
+            </div>
+
+            <!-- Modal Content -->
+            <div class="p-6">
+                <!-- Profile Header -->
+                <div class="flex flex-col items-center text-center mb-6">
+                    <div
+                        class="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden mb-4">
+                        @if (selectedApplicant()?.avatar) {
+                        <img [src]="selectedApplicant()?.avatar" alt="{{ selectedApplicant()?.name }}"
+                            class="w-full h-full object-cover" />
+                        } @else {
+                        <span class="text-gray-600 font-bold text-2xl">{{ selectedApplicant()?.name?.charAt(0) }}</span>
+                        }
+                    </div>
+                    <h4 class="text-xl font-bold text-gray-900">{{ selectedApplicant()?.name }}</h4>
+                    <p class="text-gray-500">{{ selectedApplicant()?.email }}</p>
+                </div>
+
+                <!-- Applied Position -->
+                <div class="mb-6">
+                    <h5 class="text-sm font-semibold text-gray-500 mb-2">Applied Position</h5>
+                    <p class="font-medium text-gray-900">{{ jobDetails().title }}</p>
+                    <p class="text-gray-500 text-sm">{{ jobDetails().location }} · {{ jobDetails().type }}</p>
+                </div>
+
+                <!-- Application Details -->
+                <div class="mb-6 space-y-3">
+                    <h5 class="text-sm font-semibold text-gray-500 mb-2">Application Details</h5>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-600">Status:</span>
+                        <span class="px-3 py-1 rounded-full text-xs font-medium"
+                            [ngClass]="getStatusColor(selectedApplicant()?.status || '')">
+                            {{ selectedApplicant()?.status }}
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-600">Applied Date:</span>
+                        <span class="text-gray-900">{{ selectedApplicant()?.appliedDate }}</span>
+                    </div>
+                </div>
+
+                <!-- Download Resume Button -->
+                <button (click)="downloadResume(selectedApplicant()!)"
+                    class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium mb-6">
+                    <lucide-icon [img]="Download" class="w-5 h-5"></lucide-icon>
+                    Download Resume
+                </button>
+
+                <!-- Change Status -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-500 mb-2">Change Application Status</label>
+                    <div class="relative">
+                        <select [value]="selectedApplicant()?.status"
+                            (change)="updateApplicantStatus(selectedApplicant()!.id, $any($event.target).value)"
+                            class="w-full px-4 py-3 pr-10 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none appearance-none bg-white">
+                            @for (status of statusOptions; track status) {
+                            <option [value]="status">{{ status }}</option>
+                            }
+                        </select>
+                        <lucide-icon [img]="ChevronDown"
+                            class="w-5 h-5 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none"></lucide-icon>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+</div>

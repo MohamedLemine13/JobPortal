@@ -1,0 +1,570 @@
+<div class="min-h-screen bg-gray-50 font-sans">
+    <!-- Navbar -->
+    <nav class="bg-white border-b shadow-lg border-gray-100 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <a routerLink="/find-jobs" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                    <div
+                        class="w-8 h-8 bg-linear-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                        <lucide-angular [img]="Briefcase" class="text-white w-5 h-5"></lucide-angular>
+                    </div>
+                    <span class=" font-bold text-gray-900 "> Job Portal</span>
+                </a>
+
+                <!-- Right side -->
+                <div class="flex items-center gap-4">
+                    <!-- Nav Items -->
+                    <div class="hidden md:flex items-center gap-6 mr-4">
+                        <a routerLink="/find-jobs/user-profile" routerLinkActive="bg-gray-100 text-gray-900"
+                            [routerLinkActiveOptions]="{exact: true}"
+                            class="px-4 py-2 rounded-lg font-medium text-sm transition-colors text-gray-600 hover:text-gray-900 hover:bg-gray-50">
+                            Dashboard
+                        </a>
+                        <a routerLink="/find-jobs/messages"
+                            class="flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium text-sm transition-colors px-4 py-2 rounded-lg hover:bg-gray-50">
+                            <lucide-angular [img]="Mail" class="w-4 h-4"></lucide-angular>
+                            Messages
+                        </a>
+                    </div>
+
+                    <div class="h-6 w-px bg-gray-200 hidden md:block"></div>
+                    <!-- Bookmarks -->
+                    <a routerLink="/find-jobs/saved-jobs" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                        <lucide-icon [img]="Bookmark" class="w-5 h-5 text-gray-600"></lucide-icon>
+                    </a>
+
+                    <!-- Profile with Dropdown -->
+                    <div class="relative">
+                        <div (click)="toggleProfileDropdown()"
+                            class="flex items-center gap-3 px-2 py-1 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors">
+                            <div
+                                class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center overflow-hidden">
+                                @if (user().avatar) {
+                                <img [src]="user().avatar" alt="Profile" class="w-full h-full object-cover" />
+                                } @else {
+                                <span class="text-white font-medium text-sm">{{ user().name }}</span>
+                                }
+                            </div>
+                            <div class="hidden sm:block">
+                                <p class="font-medium text-gray-900 text-sm">{{ user().fullName }}</p>
+                                <p class="text-gray-500 text-xs">Job Seeker</p>
+                            </div>
+                            <lucide-icon [img]="ChevronDown"
+                                class="w-4 h-4 text-gray-400 hidden sm:block transition-transform duration-200"
+                                [class.rotate-180]="isProfileDropdownOpen()"></lucide-icon>
+                        </div>
+
+                        <!-- Dropdown Menu -->
+                        @if (isProfileDropdownOpen()) {
+                        <div
+                            class="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
+                            <!-- User Info -->
+                            <div class="px-4 py-3 border-b border-gray-100">
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center overflow-hidden">
+                                        @if (user().avatar) {
+                                        <img [src]="user().avatar" alt="Profile" class="w-full h-full object-cover" />
+                                        } @else {
+                                        <span class="text-white font-medium">{{ user().name }}</span>
+                                        }
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-gray-900 text-sm">{{ user().fullName }}</p>
+                                        <p class="text-gray-500 text-xs">{{ user().email }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Menu Items -->
+                            <div class="py-1">
+                                <button (click)="openEditModal(); closeProfileDropdown()"
+                                    class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                    <lucide-icon [img]="Edit2" class="w-4 h-4 text-gray-400"></lucide-icon>
+                                    Edit Profile
+                                </button>
+                                <a routerLink="/find-jobs/user-profile" (click)="closeProfileDropdown()"
+                                    class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                    <lucide-icon [img]="User" class="w-4 h-4 text-gray-400"></lucide-icon>
+                                    My Dashboard
+                                </a>
+                                <a routerLink="/find-jobs/saved-jobs" (click)="closeProfileDropdown()"
+                                    class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                    <lucide-icon [img]="Bookmark" class="w-4 h-4 text-gray-400"></lucide-icon>
+                                    Saved Jobs
+                                </a>
+                            </div>
+
+                            <!-- Logout -->
+                            <div class="border-t border-gray-100 pt-1">
+                                <button (click)="logout()"
+                                    class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                    <lucide-icon [img]="LogOut" class="w-4 h-4"></lucide-icon>
+                                    Sign Out
+                                </button>
+                            </div>
+                        </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Backdrop to close dropdown -->
+    @if (isProfileDropdownOpen()) {
+    <div class="fixed inset-0 z-40" (click)="closeProfileDropdown()"></div>
+    }
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 #titleSection class="text-2xl font-bold text-gray-900 mb-8"
+            [@fadeInUp]="titleVisible ? 'visible' : 'hidden'">Dashboard</h1>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Sidebar: Profile -->
+            <div #profileSection class="lg:col-span-1" [@fadeInLeft]="profileVisible ? 'visible' : 'hidden'">
+                <div class="bg-white rounded-2xl border border-gray-200 p-6 sticky top-24">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-lg font-semibold text-gray-900">My Profile</h2>
+                        <button (click)="openEditModal()" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                            <lucide-icon [img]="Edit2" class="w-4 h-4 text-gray-500"></lucide-icon>
+                        </button>
+                    </div>
+
+                    <div class="flex flex-col items-center mb-6">
+                        <!-- Avatar with upload option -->
+                        <div class="relative mb-4">
+                            <div
+                                class="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center overflow-hidden">
+                                @if (user().avatar) {
+                                <img [src]="user().avatar" alt="Profile" class="w-full h-full object-cover" />
+                                } @else {
+                                <span class="text-3xl text-white font-semibold">{{ user().name }}</span>
+                                }
+                            </div>
+                            <button (click)="triggerAvatarUpload()"
+                                class="absolute bottom-0 right-0 w-8 h-8 bg-white border-2 border-gray-200 rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors shadow-sm">
+                                <lucide-icon [img]="Camera" class="w-4 h-4 text-gray-600"></lucide-icon>
+                            </button>
+                            <input #avatarInput type="file" accept="image/*" class="hidden"
+                                (change)="onAvatarSelected($event)" />
+                        </div>
+                        <h3 class="font-semibold text-gray-900 text-lg">{{ user().fullName }}</h3>
+                        <p class="text-gray-500 text-sm mb-2">{{ user().role }}</p>
+
+                        <div class="flex items-center gap-1.5 text-gray-400 text-sm">
+                            <lucide-icon [img]="MapPin" class="w-4 h-4"></lucide-icon>
+                            <span>{{ user().location }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Bio -->
+                    @if (user().bio) {
+                    <div class="mb-6">
+                        <p class="text-gray-600 text-sm text-center leading-relaxed">{{ user().bio }}</p>
+                    </div>
+                    }
+
+                    <!-- Contact Info -->
+                    <div class="mb-6 space-y-2">
+                        <div class="flex items-center gap-3 text-sm">
+                            <lucide-icon [img]="Mail" class="w-4 h-4 text-gray-400"></lucide-icon>
+                            <span class="text-gray-600">{{ user().email }}</span>
+                        </div>
+                        @if (user().phone) {
+                        <div class="flex items-center gap-3 text-sm">
+                            <lucide-icon [img]="User" class="w-4 h-4 text-gray-400"></lucide-icon>
+                            <span class="text-gray-600">{{ user().phone }}</span>
+                        </div>
+                        }
+                    </div>
+
+                    <!-- Skills -->
+                    <div class="mb-6">
+                        <h4 class="text-sm font-semibold text-gray-900 mb-3">Skills</h4>
+                        <div class="flex flex-wrap gap-2">
+                            @for (skill of user().skills; track skill) {
+                            <span class="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-medium">
+                                {{ skill }}
+                            </span>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- CV Section -->
+                    <div class="mb-6">
+                        <h4 class="text-sm font-semibold text-gray-900 mb-3">Resume / CV</h4>
+                        @if (user().cv) {
+                        <div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                            <div class="flex items-start gap-3">
+                                <div
+                                    class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <lucide-icon [img]="FileText" class="w-5 h-5 text-red-500"></lucide-icon>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900 truncate">{{ user().cv?.name }}</p>
+                                    <p class="text-xs text-gray-500">{{ user().cv?.size }} • {{ user().cv?.uploadDate }}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 mt-3">
+                                <button (click)="viewCV()"
+                                    class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                                    <lucide-icon [img]="Eye" class="w-4 h-4"></lucide-icon>
+                                    View
+                                </button>
+                                <button (click)="downloadCV()"
+                                    class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                                    <lucide-icon [img]="Download" class="w-4 h-4"></lucide-icon>
+                                    Download
+                                </button>
+                                <button (click)="deleteCV()"
+                                    class="p-2 bg-white border border-gray-200 rounded-lg text-red-500 hover:bg-red-50 hover:border-red-200 transition-colors">
+                                    <lucide-icon [img]="Trash2" class="w-4 h-4"></lucide-icon>
+                                </button>
+                            </div>
+                        </div>
+                        } @else {
+                        <div (click)="triggerCVUpload()"
+                            class="p-6 border-2 border-dashed border-gray-200 rounded-xl text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-all">
+                            <div
+                                class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <lucide-icon [img]="Upload" class="w-6 h-6 text-gray-400"></lucide-icon>
+                            </div>
+                            <p class="text-sm font-medium text-gray-700 mb-1">Upload your CV</p>
+                            <p class="text-xs text-gray-500">PDF, DOC up to 10MB</p>
+                        </div>
+                        }
+                        <input #fileInput type="file" accept=".pdf,.doc,.docx" class="hidden"
+                            (change)="onCVSelected($event)" />
+                    </div>
+
+                    <button (click)="openEditModal()"
+                        class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl text-sm transition-colors flex items-center justify-center gap-2">
+                        <lucide-icon [img]="Edit2" class="w-4 h-4"></lucide-icon>
+                        Edit Profile
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Content: Applications -->
+            <div #applicationsSection class="lg:col-span-2" [@fadeInRight]="applicationsVisible ? 'visible' : 'hidden'">
+                <div class="bg-white rounded-2xl border border-gray-200 p-6">
+                    <div class="mb-6">
+                        <h2 class="text-lg font-semibold text-gray-900">My Applications</h2>
+                        <p class="text-gray-500 text-sm">Track your application status</p>
+                    </div>
+
+                    <div class="space-y-4">
+                        @for (app of applications(); track app.id) {
+                        <div class="p-5 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors">
+                            <div class="flex items-start justify-between mb-4">
+                                <div>
+                                    <h3 class="font-semibold text-gray-900 mb-1">{{ app.role }}</h3>
+                                    <p class="text-gray-500 text-sm mb-2">{{ app.company }}</p>
+
+                                    <div class="flex items-center gap-4 text-xs text-gray-400">
+                                        <div class="flex items-center gap-1">
+                                            <lucide-icon [img]="MapPin" class="w-3.5 h-3.5"></lucide-icon>
+                                            <span>{{ app.location }}</span>
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            <lucide-icon [img]="Clock" class="w-3.5 h-3.5"></lucide-icon>
+                                            <span>{{ app.date }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <span
+                                    [class]="'px-3 py-1 rounded-full text-xs font-medium border flex items-center gap-1.5 ' + getStatusColor(app.status)">
+                                    <lucide-icon [img]="getStatusIcon(app.status)" class="w-3.5 h-3.5"></lucide-icon>
+                                    {{ app.status }}
+                                </span>
+                            </div>
+
+                            <button
+                                class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+                                <lucide-icon [img]="Mail" class="w-4 h-4"></lucide-icon>
+                                Send Message
+                            </button>
+                        </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    @if (isEditModalOpen()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" (click)="closeEditModal()"></div>
+
+        <!-- Modal -->
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <!-- Header -->
+            <div
+                class="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+                <h2 class="text-xl font-bold text-gray-900">Edit Profile</h2>
+                <button (click)="closeEditModal()" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                    <lucide-icon [img]="X" class="w-5 h-5 text-gray-500"></lucide-icon>
+                </button>
+            </div>
+
+            <!-- Form -->
+            <div class="p-6 space-y-5">
+                <!-- Avatar -->
+                <div class="flex flex-col items-center">
+                    <div class="relative mb-2">
+                        <div
+                            class="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center overflow-hidden">
+                            @if (user().avatar) {
+                            <img [src]="user().avatar" alt="Profile" class="w-full h-full object-cover" />
+                            } @else {
+                            <span class="text-2xl text-white font-semibold">{{ editForm().fullName.charAt(0) || 'U'
+                                }}</span>
+                            }
+                        </div>
+                        <button (click)="triggerAvatarUpload()"
+                            class="absolute bottom-0 right-0 w-7 h-7 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors shadow-lg">
+                            <lucide-icon [img]="Camera" class="w-3.5 h-3.5 text-white"></lucide-icon>
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500">Click to change photo</p>
+                </div>
+
+                <!-- Full Name -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Full Name</label>
+                    <input type="text" [value]="editForm().fullName"
+                        (input)="updateFormField('fullName', $any($event.target).value)"
+                        class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                        placeholder="Enter your full name" />
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+                    <input type="email" [value]="editForm().email"
+                        (input)="updateFormField('email', $any($event.target).value)"
+                        class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                        placeholder="Enter your email" />
+                </div>
+
+                <!-- Phone -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Phone</label>
+                    <input type="tel" [value]="editForm().phone"
+                        (input)="updateFormField('phone', $any($event.target).value)"
+                        class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                        placeholder="Enter your phone number" />
+                </div>
+
+                <!-- Location -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Location</label>
+                    <input type="text" [value]="editForm().location"
+                        (input)="updateFormField('location', $any($event.target).value)"
+                        class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                        placeholder="City, Country" />
+                </div>
+
+                <!-- Bio -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Bio</label>
+                    <textarea [value]="editForm().bio" (input)="updateFormField('bio', $any($event.target).value)"
+                        rows="3"
+                        class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
+                        placeholder="Tell us about yourself..."></textarea>
+                </div>
+
+                <!-- Skills -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Skills</label>
+                    <div class="flex flex-wrap gap-2 mb-3">
+                        @for (skill of editForm().skills; track skill) {
+                        <span
+                            class="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium flex items-center gap-1.5">
+                            {{ skill }}
+                            <button (click)="removeSkill(skill)" class="hover:text-blue-800">
+                                <lucide-icon [img]="X" class="w-3.5 h-3.5"></lucide-icon>
+                            </button>
+                        </span>
+                        }
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="text" [value]="editForm().newSkill"
+                            (input)="updateFormField('newSkill', $any($event.target).value)"
+                            (keydown)="onSkillKeydown($event)"
+                            class="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                            placeholder="Add a skill" />
+                        <button (click)="addSkill()"
+                            class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors flex items-center gap-1.5">
+                            <lucide-icon [img]="Plus" class="w-4 h-4"></lucide-icon>
+                            Add
+                        </button>
+                    </div>
+                </div>
+
+                <!-- CV Upload in Modal -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Resume / CV</label>
+                    @if (user().cv) {
+                    <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                        <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <lucide-icon [img]="FileText" class="w-5 h-5 text-red-500"></lucide-icon>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-gray-900 truncate">{{ user().cv?.name }}</p>
+                            <p class="text-xs text-gray-500">{{ user().cv?.size }}</p>
+                        </div>
+                        <button (click)="triggerCVUpload()"
+                            class="px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                            Replace
+                        </button>
+                    </div>
+                    } @else {
+                    <div (click)="triggerCVUpload()"
+                        class="p-4 border-2 border-dashed border-gray-200 rounded-xl text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-all">
+                        <lucide-icon [img]="Upload" class="w-6 h-6 text-gray-400 mx-auto mb-2"></lucide-icon>
+                        <p class="text-sm text-gray-600">Click to upload CV</p>
+                    </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div
+                class="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 flex items-center justify-end gap-3 rounded-b-2xl">
+                <button (click)="closeEditModal()"
+                    class="px-5 py-2.5 text-gray-700 font-medium rounded-xl hover:bg-gray-100 transition-colors">
+                    Cancel
+                </button>
+                <button (click)="saveProfile()"
+                    class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+    }
+
+    <!-- CV Viewer Modal -->
+    @if (isCVViewerOpen()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" (click)="closeCVViewer()"></div>
+
+        <!-- Modal -->
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                        <lucide-icon [img]="FileText" class="w-5 h-5 text-red-500"></lucide-icon>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-900">{{ user().cv?.name }}</h3>
+                        <p class="text-xs text-gray-500">{{ user().cv?.size }} • {{ user().cv?.uploadDate }}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button (click)="downloadCV()"
+                        class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors">
+                        <lucide-icon [img]="Download" class="w-4 h-4"></lucide-icon>
+                        Download
+                    </button>
+                    <button (click)="closeCVViewer()" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                        <lucide-icon [img]="X" class="w-5 h-5 text-gray-500"></lucide-icon>
+                    </button>
+                </div>
+            </div>
+
+            <!-- CV Preview Area -->
+            <div class="flex-1 bg-gray-100 p-6 overflow-auto">
+                <div class="bg-white rounded-xl shadow-lg max-w-2xl mx-auto p-8 min-h-full">
+                    <!-- Sample CV Preview Content -->
+                    <div class="text-center mb-8">
+                        <div
+                            class="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                            @if (user().avatar) {
+                            <img [src]="user().avatar" alt="Profile" class="w-full h-full object-cover rounded-full" />
+                            } @else {
+                            <span class="text-2xl text-white font-semibold">{{ user().name }}</span>
+                            }
+                        </div>
+                        <h1 class="text-2xl font-bold text-gray-900">{{ user().fullName }}</h1>
+                        <p class="text-gray-600">{{ user().role }}</p>
+                        <p class="text-gray-500 text-sm">{{ user().location }}</p>
+                    </div>
+
+                    <div class="space-y-6">
+                        <!-- Contact -->
+                        <div>
+                            <h2 class="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2 mb-3">Contact
+                            </h2>
+                            <div class="space-y-1 text-sm text-gray-600">
+                                <p>{{ user().email }}</p>
+                                <p>{{ user().phone }}</p>
+                                <p>{{ user().location }}</p>
+                            </div>
+                        </div>
+
+                        <!-- About -->
+                        @if (user().bio) {
+                        <div>
+                            <h2 class="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2 mb-3">About
+                            </h2>
+                            <p class="text-sm text-gray-600 leading-relaxed">{{ user().bio }}</p>
+                        </div>
+                        }
+
+                        <!-- Skills -->
+                        <div>
+                            <h2 class="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2 mb-3">Skills
+                            </h2>
+                            <div class="flex flex-wrap gap-2">
+                                @for (skill of user().skills; track skill) {
+                                <span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-sm">{{ skill }}</span>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Experience Placeholder -->
+                        <div>
+                            <h2 class="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2 mb-3">
+                                Experience</h2>
+                            <div class="space-y-4">
+                                <div>
+                                    <h3 class="font-medium text-gray-900">Senior Frontend Developer</h3>
+                                    <p class="text-sm text-gray-600">TechCorp • 2022 - Present</p>
+                                    <p class="text-sm text-gray-500 mt-1">Led development of customer-facing web
+                                        applications using React and TypeScript.</p>
+                                </div>
+                                <div>
+                                    <h3 class="font-medium text-gray-900">Full Stack Developer</h3>
+                                    <p class="text-sm text-gray-600">StartupXYZ • 2019 - 2022</p>
+                                    <p class="text-sm text-gray-500 mt-1">Built and maintained scalable backend services
+                                        with Node.js and PostgreSQL.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Education Placeholder -->
+                        <div>
+                            <h2 class="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2 mb-3">Education
+                            </h2>
+                            <div>
+                                <h3 class="font-medium text-gray-900">Master's in Computer Science</h3>
+                                <p class="text-sm text-gray-600">University of Paris • 2017 - 2019</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+</div>

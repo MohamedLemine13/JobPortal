@@ -1,0 +1,282 @@
+<div class="min-h-screen bg-gray-50">
+    <!-- Navbar -->
+    <nav class="bg-white border-b shadow-lg border-gray-100 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <a routerLink="/find-jobs" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                    <div
+                        class="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                        <lucide-angular [img]="Briefcase" class="text-white w-5 h-5"></lucide-angular>
+                    </div>
+                    <span class="font-bold text-gray-900">Job Portal</span>
+                </a>
+
+                <!-- Right side -->
+                <div class="flex items-center gap-4">
+                    <!-- Nav Items -->
+                    <div class="hidden md:flex items-center gap-6 mr-4">
+                        <a routerLink="/find-jobs/user-profile"
+                            class="px-4 py-2 rounded-lg font-medium text-sm transition-colors text-gray-600 hover:text-gray-900 hover:bg-gray-50">
+                            Dashboard
+                        </a>
+                        <a routerLink="/find-jobs/messages"
+                            class="flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium text-sm transition-colors px-4 py-2 rounded-lg hover:bg-gray-50">
+                            <lucide-angular [img]="Mail" class="w-4 h-4"></lucide-angular>
+                            Messages
+                        </a>
+                    </div>
+
+                    <div class="h-6 w-px bg-gray-200 hidden md:block"></div>
+
+                    <!-- Bookmarks - Active -->
+                    <a routerLink="/find-jobs/saved-jobs"
+                        class="p-2 bg-blue-50 rounded-lg transition-colors relative">
+                        <lucide-icon [img]="Bookmark" class="w-5 h-5 text-blue-600"></lucide-icon>
+                        @if (savedJobsCount() > 0) {
+                        <span
+                            class="absolute -top-1 -right-1 w-5 h-5 bg-blue-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                            {{ savedJobsCount() }}
+                        </span>
+                        }
+                    </a>
+
+                    <!-- Profile with Dropdown -->
+                    <div class="relative">
+                        <div (click)="toggleProfileDropdown()"
+                            class="flex items-center gap-3 px-2 py-1 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors">
+                            <div class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center overflow-hidden">
+                                @if (user().avatar) {
+                                <img [src]="user().avatar" alt="Profile" class="w-full h-full object-cover" />
+                                } @else {
+                                <span class="text-white font-medium text-sm">{{ user().name }}</span>
+                                }
+                            </div>
+                            <div class="hidden sm:block">
+                                <p class="font-medium text-gray-900 text-sm">{{ user().fullName }}</p>
+                                <p class="text-gray-500 text-xs">{{ user().role }}</p>
+                            </div>
+                            <lucide-icon [img]="ChevronDown" 
+                                class="w-4 h-4 text-gray-400 hidden sm:block transition-transform duration-200"
+                                [class.rotate-180]="isProfileDropdownOpen()"></lucide-icon>
+                        </div>
+
+                        <!-- Dropdown Menu -->
+                        @if (isProfileDropdownOpen()) {
+                        <div class="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
+                            <!-- User Info -->
+                            <div class="px-4 py-3 border-b border-gray-100">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center overflow-hidden">
+                                        @if (user().avatar) {
+                                        <img [src]="user().avatar" alt="Profile" class="w-full h-full object-cover" />
+                                        } @else {
+                                        <span class="text-white font-medium">{{ user().name }}</span>
+                                        }
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-gray-900 text-sm">{{ user().fullName }}</p>
+                                        <p class="text-gray-500 text-xs">{{ user().email }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Menu Items -->
+                            <div class="py-1">
+                                <a routerLink="/find-jobs/user-profile" (click)="closeProfileDropdown()"
+                                    class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                    <lucide-icon [img]="Edit2" class="w-4 h-4 text-gray-400"></lucide-icon>
+                                    Edit Profile
+                                </a>
+                                <a routerLink="/find-jobs/user-profile" (click)="closeProfileDropdown()"
+                                    class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                    <lucide-icon [img]="User" class="w-4 h-4 text-gray-400"></lucide-icon>
+                                    My Dashboard
+                                </a>
+                                <a routerLink="/find-jobs/saved-jobs" (click)="closeProfileDropdown()"
+                                    class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                    <lucide-icon [img]="Bookmark" class="w-4 h-4 text-gray-400"></lucide-icon>
+                                    Saved Jobs
+                                </a>
+                            </div>
+
+                            <!-- Logout -->
+                            <div class="border-t border-gray-100 pt-1">
+                                <button
+                                    class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                    <lucide-icon [img]="LogOut" class="w-4 h-4"></lucide-icon>
+                                    Sign Out
+                                </button>
+                            </div>
+                        </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Backdrop to close dropdown -->
+    @if (isProfileDropdownOpen()) {
+    <div class="fixed inset-0 z-40" (click)="closeProfileDropdown()"></div>
+    }
+
+    <!-- Main Content -->
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div #headerSection class="flex items-center justify-between mb-8" [@fadeInUp]="headerVisible ? 'visible' : 'hidden'">
+            <div class="flex items-center gap-4">
+                <a routerLink="/find-jobs"
+                    class="w-10 h-10 bg-white border border-gray-200 rounded-xl flex items-center justify-center hover:bg-gray-50 transition-colors shadow-sm">
+                    <lucide-icon [img]="ChevronLeft" class="w-5 h-5 text-gray-600"></lucide-icon>
+                </a>
+                <h1 class="text-2xl font-bold text-gray-900">Saved Jobs</h1>
+            </div>
+
+            <!-- View Toggle -->
+            <div class="flex items-center bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                <button (click)="viewMode.set('grid')" [class]="viewMode() === 'grid' 
+                        ? 'p-2.5 bg-blue-600 text-white' 
+                        : 'p-2.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50'">
+                    <lucide-icon [img]="Grid3x3" class="w-5 h-5"></lucide-icon>
+                </button>
+                <button (click)="viewMode.set('list')" [class]="viewMode() === 'list' 
+                        ? 'p-2.5 bg-blue-600 text-white' 
+                        : 'p-2.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50'">
+                    <lucide-icon [img]="List" class="w-5 h-5"></lucide-icon>
+                </button>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        @if (savedJobs().length === 0) {
+        <div class="bg-white rounded-2xl border border-gray-200 p-16 text-center" @scaleIn>
+            <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <lucide-icon [img]="Bookmark" class="w-10 h-10 text-gray-400"></lucide-icon>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">No saved jobs yet</h3>
+            <p class="text-gray-500 mb-6">Start saving jobs you're interested in by clicking the bookmark icon</p>
+            <a routerLink="/find-jobs"
+                class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20">
+                Browse Jobs
+            </a>
+        </div>
+        }
+
+        <!-- Grid View -->
+        @if (viewMode() === 'grid' && savedJobs().length > 0) {
+        <div #cardsSection class="grid grid-cols-1 md:grid-cols-2 gap-5" [@fadeInCards]="cardsVisible ? 'visible' : 'hidden'">
+            @for (job of savedJobs(); track job.id) {
+            <div @cardRemove
+                class="bg-white rounded-2xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group">
+                <!-- Header -->
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex items-start gap-4">
+                        <div [class]="'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ' + job.logoColor">
+                            @if (job.companyLogo) {
+                            <img [src]="job.companyLogo" alt="Company" class="w-full h-full object-cover rounded-xl" />
+                            } @else {
+                            <lucide-icon [img]="Building2" class="text-white w-6 h-6 opacity-90"></lucide-icon>
+                            }
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-900 text-lg group-hover:text-blue-600 transition-colors">
+                                {{ job.title }}
+                            </h3>
+                            <div class="flex items-center gap-1.5 text-gray-500 text-sm">
+                                <lucide-icon [img]="Building2" class="w-4 h-4"></lucide-icon>
+                                <span>{{ job.company }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button (click)="removeFromSaved(job.id); $event.stopPropagation()"
+                        class="p-2 hover:bg-red-50 rounded-lg transition-colors group/btn">
+                        <lucide-icon [img]="Bookmark"
+                            class="w-5 h-5 text-blue-600 fill-blue-600 group-hover/btn:text-red-500 group-hover/btn:fill-red-500 transition-colors"></lucide-icon>
+                    </button>
+                </div>
+
+                <!-- Tags -->
+                <div class="flex flex-wrap items-center gap-2 mb-4">
+                    <span class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 text-gray-600 rounded-lg text-sm">
+                        <lucide-icon [img]="MapPin" class="w-3.5 h-3.5"></lucide-icon>
+                        {{ job.location }}
+                    </span>
+                    <span [class]="'px-3 py-1.5 rounded-lg text-sm font-medium ' + getTypeClass(job.type)">
+                        {{ job.type }}
+                    </span>
+                    <span class="px-3 py-1.5 bg-gray-50 text-gray-600 rounded-lg text-sm">
+                        {{ job.category }}
+                    </span>
+                </div>
+
+                <!-- Date -->
+                <div class="flex items-center gap-1.5 text-gray-400 text-sm mb-4">
+                    <lucide-icon [img]="Calendar" class="w-4 h-4"></lucide-icon>
+                    <span>{{ job.postedDate }}</span>
+                </div>
+
+                <!-- Salary -->
+                <p class="text-blue-600 font-bold text-lg">{{ job.salary }}</p>
+            </div>
+            }
+        </div>
+        }
+
+        <!-- List View -->
+        @if (viewMode() === 'list' && savedJobs().length > 0) {
+        <div #cardsSection class="space-y-4" [@fadeInCards]="cardsVisible ? 'visible' : 'hidden'">
+            @for (job of savedJobs(); track job.id) {
+            <div @cardRemove
+                class="bg-white rounded-2xl border border-gray-200 p-5 hover:shadow-lg transition-all duration-300 cursor-pointer group">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4 flex-1">
+                        <div [class]="'w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 ' + job.logoColor">
+                            @if (job.companyLogo) {
+                            <img [src]="job.companyLogo" alt="Company" class="w-full h-full object-cover rounded-xl" />
+                            } @else {
+                            <lucide-icon [img]="Building2" class="text-white w-7 h-7 opacity-90"></lucide-icon>
+                            }
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-semibold text-gray-900 text-lg group-hover:text-blue-600 transition-colors">
+                                {{ job.title }}
+                            </h3>
+                            <div class="flex items-center gap-1.5 text-gray-500 text-sm mb-2">
+                                <lucide-icon [img]="Building2" class="w-4 h-4"></lucide-icon>
+                                <span>{{ job.company }}</span>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span
+                                    class="flex items-center gap-1 px-2.5 py-1 bg-gray-50 text-gray-600 rounded-lg text-xs">
+                                    <lucide-icon [img]="MapPin" class="w-3 h-3"></lucide-icon>
+                                    {{ job.location }}
+                                </span>
+                                <span [class]="'px-2.5 py-1 rounded-lg text-xs font-medium ' + getTypeClass(job.type)">
+                                    {{ job.type }}
+                                </span>
+                                <span class="px-2.5 py-1 bg-gray-50 text-gray-600 rounded-lg text-xs">
+                                    {{ job.category }}
+                                </span>
+                                <span class="flex items-center gap-1 text-gray-400 text-xs">
+                                    <lucide-icon [img]="Calendar" class="w-3 h-3"></lucide-icon>
+                                    {{ job.postedDate }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <p class="text-blue-600 font-bold text-lg">{{ job.salary }}</p>
+                        <button (click)="removeFromSaved(job.id); $event.stopPropagation()"
+                            class="p-2.5 hover:bg-red-50 rounded-xl transition-colors group/btn border border-gray-200">
+                            <lucide-icon [img]="Bookmark"
+                                class="w-5 h-5 text-blue-600 fill-blue-600 group-hover/btn:text-red-500 group-hover/btn:fill-red-500 transition-colors"></lucide-icon>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            }
+        </div>
+        }
+    </div>
+</div>

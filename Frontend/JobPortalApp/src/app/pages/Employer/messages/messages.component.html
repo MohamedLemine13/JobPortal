@@ -1,0 +1,271 @@
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 px-4 lg:px-8 py-4 sticky top-0 z-20">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <!-- Left: Dashboard Link & Title -->
+            <div class="flex items-center gap-4">
+                <a routerLink="/employer-dashbord"
+                    class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    <lucide-icon [img]="LayoutDashboard" class="w-5 h-5"></lucide-icon>
+                    <span class="font-medium hidden sm:inline">Dashboard</span>
+                </a>
+                <div class="flex items-center gap-2">
+                    <lucide-icon [img]="Mail" class="w-6 h-6 text-gray-700"></lucide-icon>
+                    <h1 class="text-xl font-bold text-gray-900">Messages</h1>
+                </div>
+            </div>
+
+            <!-- Profile with Dropdown -->
+            <div class="relative">
+                <!-- Backdrop for closing dropdown -->
+                @if (isProfileDropdownOpen()) {
+                <div class="fixed inset-0 z-40" (click)="closeProfileDropdown()"></div>
+                }
+
+                <div (click)="toggleProfileDropdown()"
+                    class="flex items-center gap-3 px-2 py-1 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors">
+                    <div
+                        class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center overflow-hidden">
+                        @if (user().avatar) {
+                        <img [src]="user().avatar" alt="Profile" class="w-full h-full object-cover" />
+                        } @else {
+                        <span class="text-white font-medium text-sm">{{ user().name.charAt(0) }}</span>
+                        }
+                    </div>
+                    <div class="hidden sm:block">
+                        <p class="font-medium text-gray-900 text-sm">{{ user().name }}</p>
+                        <p class="text-gray-500 text-xs">{{ user().role }}</p>
+                    </div>
+                    <lucide-icon [img]="ChevronDown"
+                        class="w-4 h-4 text-gray-400 hidden sm:block transition-transform duration-200"
+                        [class.rotate-180]="isProfileDropdownOpen()"></lucide-icon>
+                </div>
+
+                <!-- Dropdown Menu -->
+                @if (isProfileDropdownOpen()) {
+                <div
+                    class="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
+                    <!-- User Info -->
+                    <div class="px-4 py-3 border-b border-gray-100">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center overflow-hidden">
+                                @if (user().avatar) {
+                                <img [src]="user().avatar" alt="Profile" class="w-full h-full object-cover" />
+                                } @else {
+                                <span class="text-white font-medium">{{ user().name.charAt(0) }}</span>
+                                }
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-900 text-sm">{{ user().name }}</p>
+                                <p class="text-gray-500 text-xs">{{ user().email }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Menu Items -->
+                    <div class="py-1">
+                        <a routerLink="/employer-dashbord/company-profile" (click)="closeProfileDropdown()"
+                            class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                            <lucide-icon [img]="Edit3" class="w-4 h-4 text-gray-400"></lucide-icon>
+                            Edit Profile
+                        </a>
+                        <a routerLink="/employer-dashbord" (click)="closeProfileDropdown()"
+                            class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                            <lucide-icon [img]="LayoutDashboard" class="w-4 h-4 text-gray-400"></lucide-icon>
+                            Dashboard
+                        </a>
+                        <a routerLink="/employer-dashbord/manage-jobs" (click)="closeProfileDropdown()"
+                            class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                            <lucide-icon [img]="FileText" class="w-4 h-4 text-gray-400"></lucide-icon>
+                            Manage Jobs
+                        </a>
+                        <a routerLink="/employer-dashbord/messages" (click)="closeProfileDropdown()"
+                            class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                            <lucide-icon [img]="Mail" class="w-4 h-4 text-gray-400"></lucide-icon>
+                            Messages
+                        </a>
+                    </div>
+
+                    <!-- Logout -->
+                    <div class="border-t border-gray-100 pt-1">
+                        <button (click)="logout(); closeProfileDropdown()"
+                            class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                            <lucide-icon [img]="LogOut" class="w-4 h-4"></lucide-icon>
+                            Sign Out
+                        </button>
+                    </div>
+                </div>
+                }
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto p-4 lg:p-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Messagerie</h2>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="flex h-[600px]">
+                <!-- Conversations List -->
+                <div class="w-full md:w-1/3 border-r border-gray-100 flex flex-col">
+                    <!-- Search -->
+                    <div class="p-4 border-b border-gray-100">
+                        <div class="relative">
+                            <lucide-icon [img]="Search"
+                                class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></lucide-icon>
+                            <input type="text" [value]="searchQuery()"
+                                (input)="searchQuery.set($any($event.target).value)"
+                                placeholder="Rechercher une conversation..."
+                                class="w-full pl-16 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm" />
+                        </div>
+                    </div>
+
+                    <!-- Conversation Items -->
+                    <div class="flex-1 overflow-y-auto">
+                        @for (conv of filteredConversations(); track conv.id) {
+                        <div (click)="selectConversation(conv.id)"
+                            class="p-4 border-l-4 cursor-pointer transition-colors"
+                            [class.border-blue-500]="selectedConversationId() === conv.id"
+                            [class.bg-blue-50]="selectedConversationId() === conv.id"
+                            [class.border-transparent]="selectedConversationId() !== conv.id"
+                            [class.hover:bg-gray-50]="selectedConversationId() !== conv.id">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="font-semibold text-gray-900 truncate">{{ conv.companyName }}</h4>
+                                    <p class="text-blue-600 text-sm">{{ conv.jobTitle }}</p>
+                                    <p class="text-gray-500 text-sm truncate mt-1">{{ conv.lastMessage }}</p>
+                                    <p class="text-gray-400 text-xs mt-1">{{ conv.lastMessageTime }}</p>
+                                </div>
+                                @if (conv.unreadCount > 0) {
+                                <span
+                                    class="flex-shrink-0 w-6 h-6 bg-blue-500 text-white text-xs font-semibold rounded-full flex items-center justify-center">
+                                    {{ conv.unreadCount }}
+                                </span>
+                                }
+                            </div>
+                        </div>
+                        }
+
+                        @if (filteredConversations().length === 0) {
+                        <div class="p-8 text-center text-gray-500">
+                            <p>Aucune conversation trouvée</p>
+                        </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Chat Area -->
+                <div class="hidden md:flex flex-1 flex-col">
+                    @if (selectedConversation()) {
+                    <!-- Chat Header -->
+                    <div class="p-4 border-b border-gray-100">
+                        <h3 class="font-bold text-gray-900">{{ selectedConversation()?.companyName }}</h3>
+                        <p class="text-blue-600 text-sm bg-blue-100 px-2 py-1 rounded inline-block mt-1">
+                            {{ selectedConversation()?.jobTitle }}
+                        </p>
+                    </div>
+
+                    <!-- Messages -->
+                    <div #chatContainer class="flex-1 overflow-y-auto p-4 space-y-4">
+                        @for (message of selectedConversation()?.messages; track message.id) {
+                        <div @slideIn class="flex" [class.justify-end]="message.isOwn">
+                            <div class="max-w-[80%] rounded-2xl px-4 py-3" [class.bg-blue-500]="message.isOwn"
+                                [class.text-white]="message.isOwn" [class.bg-gray-100]="!message.isOwn"
+                                [class.text-gray-900]="!message.isOwn">
+                                @if (!message.isOwn) {
+                                <p class="text-xs font-medium mb-1 text-gray-600">{{ message.senderName }}</p>
+                                }
+                                @if (message.isOwn) {
+                                <p class="text-xs font-medium mb-1 text-blue-100">{{ message.senderName }}</p>
+                                }
+                                <p class="text-sm whitespace-pre-wrap">{{ message.content }}</p>
+                                <p class="text-xs mt-2" [class.text-blue-200]="message.isOwn"
+                                    [class.text-gray-400]="!message.isOwn">
+                                    {{ message.timestamp }}
+                                </p>
+                            </div>
+                        </div>
+                        }
+                    </div>
+
+                    <!-- Message Input -->
+                    <div class="p-4 border-t border-gray-100">
+                        <div class="flex items-end gap-3">
+                            <div class="flex-1 relative">
+                                <textarea [value]="newMessage()" (input)="newMessage.set($any($event.target).value)"
+                                    (keydown)="handleKeydown($event)" placeholder="Écrivez votre message..." rows="1"
+                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"></textarea>
+                            </div>
+                            <button (click)="sendMessage()" [disabled]="!newMessage().trim()"
+                                class="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                <lucide-icon [img]="Send" class="w-5 h-5"></lucide-icon>
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-2">Appuyez sur Entrée pour envoyer, Shift+Entrée pour une
+                            nouvelle ligne</p>
+                    </div>
+                    } @else {
+                    <!-- No conversation selected -->
+                    <div class="flex-1 flex items-center justify-center text-gray-500">
+                        <div class="text-center">
+                            <lucide-icon [img]="Mail" class="w-16 h-16 mx-auto mb-4 text-gray-300"></lucide-icon>
+                            <p class="font-medium">Sélectionnez une conversation</p>
+                            <p class="text-sm">Choisissez une conversation pour voir les messages</p>
+                        </div>
+                    </div>
+                    }
+                </div>
+
+                <!-- Mobile: Show chat when conversation selected -->
+                <div class="flex md:hidden flex-1 flex-col" [class.hidden]="!selectedConversationId()">
+                    @if (selectedConversation()) {
+                    <!-- Chat Header with back button -->
+                    <div class="p-4 border-b border-gray-100 flex items-center gap-3">
+                        <button (click)="selectedConversationId.set(null)" class="p-2 hover:bg-gray-100 rounded-lg">
+                            ←
+                        </button>
+                        <div>
+                            <h3 class="font-bold text-gray-900">{{ selectedConversation()?.companyName }}</h3>
+                            <p class="text-blue-600 text-sm">{{ selectedConversation()?.jobTitle }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Messages -->
+                    <div #chatContainer class="flex-1 overflow-y-auto p-4 space-y-4">
+                        @for (message of selectedConversation()?.messages; track message.id) {
+                        <div class="flex" [class.justify-end]="message.isOwn">
+                            <div class="max-w-[85%] rounded-2xl px-4 py-3" [class.bg-blue-500]="message.isOwn"
+                                [class.text-white]="message.isOwn" [class.bg-gray-100]="!message.isOwn"
+                                [class.text-gray-900]="!message.isOwn">
+                                @if (!message.isOwn) {
+                                <p class="text-xs font-medium mb-1 text-gray-600">{{ message.senderName }}</p>
+                                }
+                                <p class="text-sm whitespace-pre-wrap">{{ message.content }}</p>
+                                <p class="text-xs mt-2" [class.text-blue-200]="message.isOwn"
+                                    [class.text-gray-400]="!message.isOwn">
+                                    {{ message.timestamp }}
+                                </p>
+                            </div>
+                        </div>
+                        }
+                    </div>
+
+                    <!-- Message Input -->
+                    <div class="p-4 border-t border-gray-100">
+                        <div class="flex items-end gap-2">
+                            <textarea [value]="newMessage()" (input)="newMessage.set($any($event.target).value)"
+                                (keydown)="handleKeydown($event)" placeholder="Écrivez..." rows="1"
+                                class="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"></textarea>
+                            <button (click)="sendMessage()" [disabled]="!newMessage().trim()"
+                                class="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50">
+                                <lucide-icon [img]="Send" class="w-5 h-5"></lucide-icon>
+                            </button>
+                        </div>
+                    </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

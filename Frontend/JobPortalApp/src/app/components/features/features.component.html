@@ -1,0 +1,80 @@
+<section #featuresSection class="py-20 bg-white">
+    <div class="container mx-auto px-16">
+        <!-- Header -->
+        <div 
+            [@fadeInUp]="isVisible ? 'visible' : 'hidden'"
+            class="text-center max-w-3xl mx-auto mb-16"
+        >
+            <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+                Everything You Need to
+                <span class="block bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mt-2">Succeed</span>
+            </h2>
+            <p class="text-lg text-gray-600 leading-relaxed">
+                Whether you're looking for your next opportunity or the perfect candidate,
+                we have the tools and features to make it happen.
+            </p>
+        </div>
+
+       
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-">
+            <div>
+                <div class="flex items-center  lg:pl-30 gap-3 mb-8">
+                    <div class="grid grid-cols-1">
+                        <h3 class="text-2xl font-bold text-gray-900">For Job Seekers</h3>
+                        <div class="pl-8 pt-3">
+                        <div class="h-1 w-30  bg-linear-to-r from-blue-600 to-blue-400 rounded-full"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-6 ">
+                    @for (feature of jobSeekerFeatures; track feature.title; let i = $index) {
+                        @if (isVisible) {
+                            <div 
+                                [@staggerFadeIn]="{ value: '', params: { delay: 200 + (i * 100) } }"
+                                class="flex gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors duration-300 group"
+                            >
+                                <div class="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                                    <lucide-icon [img]="feature.icon" class="w-6 h-6 text-blue-600"></lucide-icon>
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-1">{{ feature.title }}</h4>
+                                    <p class="text-gray-600 text-sm leading-relaxed">{{ feature.description }}</p>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+
+           
+            <div>
+                <div class="flex items-center gap-3 mb-8 justify-center">
+                    <div class="grid grid-cols-1">
+                        <h3 class="text-2xl font-bold text-gray-900">For Employers</h3>
+                        <div class="pt-3 pl-6">
+                            <div class="h-1 w-30 bg-linear-to-r from-purple-600 to-purple-400 rounded-full"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-6 lg:pl-15">
+                    @for (feature of employerFeatures; track feature.title; let i = $index) {
+                        @if (isVisible) {
+                            <div 
+                                [@staggerFadeIn]="{ value: '', params: { delay: 400 + (i * 100) } }"
+                                class="flex gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors duration-300 group"
+                            >
+                                <div class="flex-shrink-0 w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                                    <lucide-icon [img]="feature.icon" class="w-6 h-6 text-purple-600"></lucide-icon>
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-1">{{ feature.title }}</h4>
+                                    <p class="text-gray-600 text-sm leading-relaxed">{{ feature.description }}</p>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

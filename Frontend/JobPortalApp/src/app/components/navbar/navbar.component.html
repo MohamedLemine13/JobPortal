@@ -1,0 +1,56 @@
+<header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm" @fadeInDown>
+
+    <div class="shadow rounded-2xl py-4 " @fadeInDown>
+        <div class=" container 2xl:px-16  px-10 mx-auto flex justify-between items-center">
+            <div class="flex justify-center items-center gap-3">
+                <div
+                    class="w-8 h-8 bg-linear-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                    <lucide-angular [img]="Briefcase" class="text-white w-5 h-5"></lucide-angular>
+                </div>
+                <span class=" font-bold text-gray-900 "> Job Portal</span>
+            </div>
+            <nav class="hidden md:flex items-center space-x-8">
+                <a routerLink="/login"
+                    class="relative group text-gray-600 hover:text-gray-900 transition-colors font-medium py-1">
+                    For Jobs
+                    <span
+                        class="absolute bottom-0 left-1/2 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 transition-all duration-700 -translate-x-1/2 group-hover:w-full"></span>
+                </a>
+                <a routerLink="/login"
+                    class="relative group text-gray-600 hover:text-gray-900 transition-colors font-medium py-1">
+                    For Employers
+                    <span
+                        class="absolute bottom-0 left-1/2 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 transition-all duration-700 -translate-x-1/2 group-hover:w-full"></span>
+                </a>
+            </nav>
+            <div>
+                @if (isAuthenticated) {
+                <div class="flex items-center space-x-3">
+                    <span class="">Welcome, {{user.fullName}}</span>
+                    <a class="bg-linear-to-r from-blue-600 to-purple-600 py-2 px-4 rounded-lg text-white
+                     font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-300 "
+                        [routerLink]="user.role==='Employer' ? 'employer-dashboard' :'find-jobs' ">
+                        Dashboard
+                    </a>
+                </div>
+                }@else {
+                <div class="flex items-center space-x-3">
+                    <a routerLink="login"
+                        class="text-gray-600 hover:text-gray-900 transition-colors font-medium px-4 py-2 rounded-lg hover:bg-gray-50">
+                        Login
+                    </a>
+                    <a class="bg-gradient-to-r from-purple-600 via-blue-600 to-purple-600 bg-[length:200%_100%] hover:bg-right py-2.5 px-6 rounded-xl text-white font-semibold transition-all duration-500 shadow-lg hover:shadow-purple-500/25"
+                        routerLink="/signup">
+                        Sign Up
+                    </a>
+                </div>
+                }
+
+            </div>
+
+        </div>
+
+    </div>
+
+</header>
+<app-hero></app-hero>
