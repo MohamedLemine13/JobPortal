@@ -38,4 +38,8 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID> 
     // Count hired by employer
     @Query("SELECT COUNT(a) FROM Application a WHERE a.job.employer.id = :employerId AND a.status = 'HIRED'")
     long countHiredByEmployer(@Param("employerId") UUID employerId);
+
+    // Find applications by employer (for all jobs posted by this employer)
+    @Query("SELECT a FROM Application a WHERE a.job.employer.id = :employerId ORDER BY a.appliedAt DESC")
+    Page<Application> findByEmployerId(@Param("employerId") UUID employerId, Pageable pageable);
 }

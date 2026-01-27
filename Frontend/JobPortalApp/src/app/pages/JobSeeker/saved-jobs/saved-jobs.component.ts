@@ -1,6 +1,6 @@
-import { Component, signal, computed, ElementRef, ViewChild, AfterViewInit, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, signal, computed, ElementRef, ViewChild, AfterViewInit, Inject, PLATFORM_ID, OnInit } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { trigger, transition, style, animate, state } from '@angular/animations';
 import {
   LucideAngularModule,
@@ -16,8 +16,12 @@ import {
   Building2,
   User,
   Edit2,
-  LogOut
+  LogOut,
+  Trash2
 } from 'lucide-angular';
+import { SavedJobService } from '../../../services/saved-job.service';
+import { AuthService } from '../../../services/auth.service';
+import { ProfileService } from '../../../services/profile.service';
 
 interface SavedJob {
   id: string;
@@ -61,14 +65,121 @@ interface SavedJob {
     ])
   ]
 })
-export class SavedJobsComponent implements AfterViewInit {
+export class SavedJobsComponent implements AfterViewInit, OnInit {
   @ViewChild('headerSection') headerSection!: ElementRef;
   @ViewChild('cardsSection') cardsSection!: ElementRef;
 
   headerVisible = false;
   cardsVisible = false;
+  isLoading = signal(false);
 
-  constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
+  constructor(
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private savedJobService: SavedJobService,
+    private authService: AuthService,
+    private router: Router,
+    private profileService: ProfileService
+  ) {}
+
+  ngOnInit(): void {
+    if (!this.authService.getToken()) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    // Load user profile with avatar
+    this.loadUserProfile();
+
+    // Subscribe to user changes
+    this.authService.currentUser$.subscribe(user => {
+      if (user) {
+        this.user.update(u => ({
+          ...u,
+          name: user.fullName?.charAt(0) || 'U',
+          fullName: user.fullName,
+          email: user.email
+        }));
+      }
+    });
+  }
+
+  loadUserProfile() {
+    this.profileService.getProfile().subscribe({
+      next: (response: any) => {
+        const data = response.data || response;
+        const profile = data.profile || {};
+        const userInfo = data.user || {};
+        
+        const avatarUrl = this.profileService.getFileUrl(profile.avatar);
+        const fullName = profile.fullName || userInfo.email || 'User';
+        
+        this.user.set({
+          name: fullName.charAt(0),
+          fullName: fullName,
+          email: userInfo.email || '',
+          role: 'Job Seeker',
+          avatar: avatarUrl
+        });
+      },
+      error: (err) => console.error('Failed to load profile', err)
+    });
+
+    // Load saved jobs
+    this.loadSavedJobs();
+  }
+
+  loadSavedJobs() {
+    this.isLoading.set(true);
+    this.savedJobService.getSavedJobs().subscribe({
+      next: (response: any) => {
+        console.log('Saved jobs response:', response);
+        const data = response.data || response;
+        const jobsArray = data.savedJobs || data.jobs || [];
+        
+        const mappedJobs: SavedJob[] = jobsArray.map((item: any) => {
+          const job = item.job || item;
+          
+          // Format salary
+          let salaryDisplay = 'Competitive';
+          if (job.salaryMin && job.salaryMax) {
+            const currency = job.salaryCurrency || '$';
+            salaryDisplay = `${currency}${job.salaryMin / 1000}k/${job.salaryPeriod || 'yr'}`;
+          }
+          
+          return {
+            id: job.id,
+            title: job.title || 'Untitled',
+            company: job.company?.name || 'Unknown Company',
+            companyLogo: job.company?.logo || null,
+            logoColor: 'bg-blue-500',
+            location: job.location || 'Remote',
+            type: this.formatJobType(job.type || 'full_time'),
+            category: job.category || 'General',
+            postedDate: job.postedAt ? new Date(job.postedAt).toLocaleDateString() : 'Recently',
+            salary: salaryDisplay
+          };
+        });
+        
+        this.savedJobs.set(mappedJobs);
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to load saved jobs', err);
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  private formatJobType(type: string): string {
+    const typeMap: Record<string, string> = {
+      'full_time': 'Full-Time',
+      'part_time': 'Part-Time',
+      'contract': 'Contract',
+      'internship': 'Internship',
+      'remote': 'Remote'
+    };
+    return typeMap[type] || typeMap[type?.toLowerCase()] || type || 'Full-Time';
+  }
 
   ngAfterViewInit(): void {
     if (isPlatformBrowser(this.platformId)) {
@@ -138,50 +249,29 @@ export class SavedJobsComponent implements AfterViewInit {
   // View mode
   viewMode = signal<'grid' | 'list'>('grid');
 
-  // Saved jobs
-  savedJobs = signal<SavedJob[]>([
-    {
-      id: '1',
-      title: 'Senior Software Engineer',
-      company: 'TechNova Solutions',
-      companyLogo: null,
-      logoColor: 'bg-blue-500',
-      location: 'San Francisco, USA',
-      type: 'Full-Time',
-      category: 'IT & Software',
-      postedDate: '5th Jul 2025',
-      salary: '$60k/m'
-    },
-    {
-      id: '2',
-      title: 'UX/UI Designer',
-      company: 'BlueGrid Technologies',
-      companyLogo: null,
-      logoColor: 'bg-cyan-500',
-      location: 'Berlin, Germany',
-      type: 'Full-Time',
-      category: 'Design',
-      postedDate: '5th Jul 2025',
-      salary: '$65k/m'
-    },
-    {
-      id: '3',
-      title: 'Digital Marketing Specialist',
-      company: 'PixelForge Studios',
-      companyLogo: null,
-      logoColor: 'bg-gray-800',
-      location: 'London, UK',
-      type: 'Full-Time',
-      category: 'Marketing',
-      postedDate: '5th Jul 2025',
-      salary: '$55k/m'
-    }
-  ]);
+  // Saved jobs - loaded from backend
+  savedJobs = signal<SavedJob[]>([]);
 
   savedJobsCount = computed(() => this.savedJobs().length);
 
+  // Trash icon
+  readonly Trash2 = Trash2;
+
   removeFromSaved(jobId: string) {
-    this.savedJobs.update(jobs => jobs.filter(j => j.id !== jobId));
+    this.savedJobService.unsaveJob(jobId).subscribe({
+      next: () => {
+        this.savedJobs.update(jobs => jobs.filter(j => j.id !== jobId));
+      },
+      error: (err) => {
+        console.error('Failed to remove saved job', err);
+        alert('Failed to remove job from saved list.');
+      }
+    });
+  }
+
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 
   getTypeClass(type: string): string {

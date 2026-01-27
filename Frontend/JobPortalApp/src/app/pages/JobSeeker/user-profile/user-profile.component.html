@@ -241,9 +241,21 @@
                     </div>
 
                     <button (click)="openEditModal()"
-                        class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl text-sm transition-colors flex items-center justify-center gap-2">
+                        class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl text-sm transition-colors flex items-center justify-center gap-2 mb-3">
                         <lucide-icon [img]="Edit2" class="w-4 h-4"></lucide-icon>
                         Edit Profile
+                    </button>
+                    
+                    <button (click)="openPasswordModal()"
+                        class="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl text-sm transition-colors flex items-center justify-center gap-2 mb-3">
+                        <lucide-icon [img]="Lock" class="w-4 h-4"></lucide-icon>
+                        Change Password
+                    </button>
+                    
+                    <button (click)="openProfilePreview()"
+                        class="w-full py-2.5 border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium rounded-xl text-sm transition-colors flex items-center justify-center gap-2">
+                        <lucide-icon [img]="Eye" class="w-4 h-4"></lucide-icon>
+                        View My Profile
                     </button>
                 </div>
             </div>
@@ -257,6 +269,18 @@
                     </div>
 
                     <div class="space-y-4">
+                        @if (applications().length === 0) {
+                        <div class="text-center py-12">
+                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <lucide-icon [img]="Briefcase" class="w-8 h-8 text-gray-400"></lucide-icon>
+                            </div>
+                            <h3 class="text-gray-900 font-medium mb-1">No applications yet</h3>
+                            <p class="text-gray-500 text-sm">Start applying to jobs to see your applications here</p>
+                            <a routerLink="/find-jobs" class="inline-block mt-4 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                                Browse Jobs
+                            </a>
+                        </div>
+                        }
                         @for (app of applications(); track app.id) {
                         <div class="p-5 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors">
                             <div class="flex items-start justify-between mb-4">
@@ -283,9 +307,9 @@
                                 </span>
                             </div>
 
-                            <button
+                            <button (click)="sendMessageToEmployer(app)"
                                 class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
-                                <lucide-icon [img]="Mail" class="w-4 h-4"></lucide-icon>
+                                <lucide-icon [img]="Send" class="w-4 h-4"></lucide-icon>
                                 Send Message
                             </button>
                         </div>
@@ -563,6 +587,184 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+    }
+
+    <!-- Change Password Modal -->
+    @if (isPasswordModalOpen()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" (click)="closePasswordModal()"></div>
+
+        <!-- Modal -->
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <!-- Header -->
+            <div class="border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                        <lucide-icon [img]="Lock" class="w-5 h-5 text-blue-600"></lucide-icon>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900">Change Password</h3>
+                </div>
+                <button (click)="closePasswordModal()" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                    <lucide-icon [img]="X" class="w-5 h-5 text-gray-500"></lucide-icon>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="p-6 space-y-4">
+                @if (passwordError()) {
+                <div class="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                    {{ passwordError() }}
+                </div>
+                }
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Current Password</label>
+                    <input type="password" [value]="passwordForm().currentPassword"
+                        (input)="updatePasswordField('currentPassword', $any($event.target).value)"
+                        class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                        placeholder="Enter current password" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">New Password</label>
+                    <input type="password" [value]="passwordForm().newPassword"
+                        (input)="updatePasswordField('newPassword', $any($event.target).value)"
+                        class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                        placeholder="Enter new password (min 6 characters)" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Confirm New Password</label>
+                    <input type="password" [value]="passwordForm().confirmPassword"
+                        (input)="updatePasswordField('confirmPassword', $any($event.target).value)"
+                        class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                        placeholder="Confirm new password" />
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="border-t border-gray-100 px-6 py-4 flex justify-end gap-3">
+                <button (click)="closePasswordModal()"
+                    class="px-5 py-2.5 text-gray-700 font-medium rounded-xl hover:bg-gray-100 transition-colors">
+                    Cancel
+                </button>
+                <button (click)="changePassword()" [disabled]="isChangingPassword()"
+                    class="px-5 py-2.5 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                    @if (isChangingPassword()) {
+                    <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    }
+                    {{ isChangingPassword() ? 'Changing...' : 'Change Password' }}
+                </button>
+            </div>
+        </div>
+    </div>
+    }
+
+    <!-- Profile Preview Modal -->
+    @if (isProfilePreviewOpen()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" (click)="closeProfilePreview()"></div>
+
+        <!-- Modal -->
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <!-- Header -->
+            <div class="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                        <lucide-icon [img]="User" class="w-5 h-5 text-blue-600"></lucide-icon>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900">Profile Preview</h3>
+                </div>
+                <button (click)="closeProfilePreview()" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                    <lucide-icon [img]="X" class="w-5 h-5 text-gray-500"></lucide-icon>
+                </button>
+            </div>
+
+            <!-- Profile Content -->
+            <div class="p-8">
+                <!-- Profile Header -->
+                <div class="text-center mb-8">
+                    <div class="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
+                        @if (user().avatar) {
+                        <img [src]="user().avatar" alt="Profile" class="w-full h-full object-cover" />
+                        } @else {
+                        <span class="text-3xl text-white font-semibold">{{ user().name }}</span>
+                        }
+                    </div>
+                    <h1 class="text-2xl font-bold text-gray-900">{{ user().fullName }}</h1>
+                    <p class="text-gray-600">{{ user().role }}</p>
+                    @if (user().location) {
+                    <p class="text-gray-500 text-sm flex items-center justify-center gap-1 mt-1">
+                        <lucide-icon [img]="MapPin" class="w-4 h-4"></lucide-icon>
+                        {{ user().location }}
+                    </p>
+                    }
+                </div>
+
+                <!-- Bio -->
+                @if (user().bio) {
+                <div class="mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2 mb-3">About Me</h2>
+                    <p class="text-gray-600 leading-relaxed">{{ user().bio }}</p>
+                </div>
+                }
+
+                <!-- Contact Info -->
+                <div class="mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2 mb-3">Contact</h2>
+                    <div class="space-y-2 text-sm text-gray-600">
+                        <div class="flex items-center gap-3">
+                            <lucide-icon [img]="Mail" class="w-4 h-4 text-gray-400"></lucide-icon>
+                            <span>{{ user().email }}</span>
+                        </div>
+                        @if (user().phone) {
+                        <div class="flex items-center gap-3">
+                            <lucide-icon [img]="User" class="w-4 h-4 text-gray-400"></lucide-icon>
+                            <span>{{ user().phone }}</span>
+                        </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Skills -->
+                @if (user().skills && user().skills.length > 0) {
+                <div class="mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2 mb-3">Skills</h2>
+                    <div class="flex flex-wrap gap-2">
+                        @for (skill of user().skills; track skill) {
+                        <span class="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
+                            {{ skill }}
+                        </span>
+                        }
+                    </div>
+                </div>
+                }
+
+                <!-- Resume -->
+                @if (user().cv) {
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2 mb-3">Resume / CV</h2>
+                    <div class="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
+                        <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                            <lucide-icon [img]="FileText" class="w-5 h-5 text-red-500"></lucide-icon>
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-medium text-gray-900">{{ user().cv?.name }}</p>
+                            <p class="text-xs text-gray-500">{{ user().cv?.size }} • {{ user().cv?.uploadDate }}</p>
+                        </div>
+                        <button (click)="downloadCV()"
+                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2">
+                            <lucide-icon [img]="Download" class="w-4 h-4"></lucide-icon>
+                            Download
+                        </button>
+                    </div>
+                </div>
+                }
             </div>
         </div>
     </div>

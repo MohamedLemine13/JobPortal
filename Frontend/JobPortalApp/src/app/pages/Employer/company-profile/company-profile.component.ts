@@ -20,10 +20,12 @@ import {
   Edit3
 } from 'lucide-angular';
 import { AuthService } from '../../../services/auth.service';
+import { ProfileService, UpdateEmployerProfileRequest } from '../../../services/profile.service';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-company-profile',
-  imports: [RouterLink, RouterLinkActive, LucideAngularModule],
+  imports: [RouterLink, RouterLinkActive, LucideAngularModule, FormsModule],
   templateUrl: './company-profile.component.html',
   // ... (animations)
   animations: [
@@ -71,25 +73,51 @@ export class CompanyProfileComponent implements OnInit {
   readonly Menu = Menu;
   readonly Edit3 = Edit3;
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(
+    private authService: AuthService, 
+    private router: Router,
+    private profileService: ProfileService
+  ) {}
 
   ngOnInit(): void {
-    this.authService.currentUser$.subscribe(user => {
-      if (user) {
-        this.user.update(u => ({
-          ...u,
-          name: user.fullName || u.name,
-          email: user.email || u.email,
-          role: user.role === 'employer' ? 'Employer' : 'Job Seeker'
-        }));
-      }
-    });
-
     if (!this.authService.getToken()) {
         this.router.navigate(['/login']);
-    } else {
-        this.authService.fetchProfile().subscribe();
+        return;
     }
+
+    // Fetch profile from backend
+    this.fetchProfile();
+  }
+
+  fetchProfile() {
+    this.profileService.getProfile().subscribe({
+      next: (response: any) => {
+        console.log('Profile response:', response);
+        const data = response.data || response;
+        const user = data.user;
+        const profile = data.profile;
+
+        // Update user info with proper avatar URL
+        const avatarUrl = this.profileService.getFileUrl(profile?.avatar);
+        this.user.set({
+          name: profile?.fullName || user?.email || 'User',
+          email: user?.email || '',
+          avatar: avatarUrl,
+          role: 'Employer'
+        });
+
+        // Update company info
+        this.company.set({
+          name: profile?.companyName || 'Company Name',
+          type: profile?.companyType || 'Company',
+          logo: profile?.companyLogo || null,
+          description: profile?.description || ''
+        });
+      },
+      error: (err) => {
+        console.error('Failed to fetch profile', err);
+      }
+    });
   }
 
   // Profile dropdown state
@@ -139,8 +167,8 @@ export class CompanyProfileComponent implements OnInit {
 
   // User info (view mode)
   user = signal({
-    name: 'John Davis',
-    email: 'company4@timetoprogram.com',
+    name: '',
+    email: '',
     avatar: null as string | null,
     role: 'Employer'
   });
@@ -184,9 +212,12 @@ export class CompanyProfileComponent implements OnInit {
     }
   }
 
+  selectedAvatarFile: File | null = null;
+
   onUserAvatarSelected(event: Event) {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (file) {
+      this.selectedAvatarFile = file;
       const reader = new FileReader();
       reader.onload = () => {
         this.editUserAvatar.set(reader.result as string);
@@ -207,26 +238,55 @@ export class CompanyProfileComponent implements OnInit {
   }
 
   saveChanges() {
-    // Update user and company data
-    this.user.update(u => ({
-      ...u,
-      name: this.editFullName(),
-      email: this.editEmail(),
-      avatar: this.editUserAvatar()
-    }));
-    
-    this.company.update(c => ({
-      ...c,
-      name: this.editCompanyName(),
-      description: this.editCompanyDescription(),
-      logo: this.editCompanyLogo()
-    }));
+    // First upload avatar if selected
+    if (this.selectedAvatarFile) {
+      this.profileService.uploadAvatar(this.selectedAvatarFile).subscribe({
+        next: (response: any) => {
+          console.log('Avatar uploaded:', response);
+          const avatarUrl = this.profileService.getFileUrl(response.data?.avatarUrl || response.avatarUrl);
+          this.user.update(u => ({ ...u, avatar: avatarUrl }));
+          this.editUserAvatar.set(avatarUrl);
+          this.selectedAvatarFile = null;
+        },
+        error: (err) => console.error('Failed to upload avatar', err)
+      });
+    }
 
-    // Exit edit mode
-    this.isEditMode.set(false);
+    const request: UpdateEmployerProfileRequest = {
+      fullName: this.editFullName(),
+      companyName: this.editCompanyName(),
+      description: this.editCompanyDescription()
+    };
 
-    // Show toast
-    this.showToast('Profile updated successfully!');
+    this.profileService.updateEmployerProfile(request).subscribe({
+      next: (response: any) => {
+        console.log('Profile updated:', response);
+        
+        // Update local state
+        this.user.update(u => ({
+          ...u,
+          name: this.editFullName(),
+          email: this.editEmail()
+        }));
+        
+        this.company.update(c => ({
+          ...c,
+          name: this.editCompanyName(),
+          description: this.editCompanyDescription(),
+          logo: this.editCompanyLogo()
+        }));
+
+        // Exit edit mode
+        this.isEditMode.set(false);
+
+        // Show toast
+        this.showToast('Profile updated successfully!');
+      },
+      error: (err) => {
+        console.error('Failed to update profile', err);
+        this.showToast('Failed to update profile. Please try again.');
+      }
+    });
   }
 
   cancelEdit() {

@@ -98,21 +98,34 @@ public class JwtTokenProvider {
             return true;
         } catch (MalformedJwtException ex) {
             log.error("Invalid JWT token");
-            System.out.println("DEBUG: Invalid JWT token: " + ex.getMessage());
         } catch (ExpiredJwtException ex) {
             log.error("Expired JWT token");
-            System.out.println("DEBUG: Expired JWT token: " + ex.getMessage());
         } catch (UnsupportedJwtException ex) {
             log.error("Unsupported JWT token");
-            System.out.println("DEBUG: Unsupported JWT token: " + ex.getMessage());
         } catch (IllegalArgumentException ex) {
             log.error("JWT claims string is empty");
-            System.out.println("DEBUG: JWT claims string is empty: " + ex.getMessage());
         } catch (Exception ex) {
             log.error("JWT validation failed", ex);
-            System.out.println("DEBUG: JWT validation failed: " + ex.getMessage());
         }
         return false;
+    }
+
+    /**
+     * Check if the token is an access token (not a refresh token)
+     */
+    public boolean isAccessToken(String token) {
+        try {
+            Claims claims = Jwts.parser()
+                    .verifyWith(key)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+            // Access tokens have email claim, refresh tokens have type=refresh
+            String type = claims.get("type", String.class);
+            return type == null || !"refresh".equals(type);
+        } catch (Exception ex) {
+            return false;
+        }
     }
 
     public long getAccessTokenExpiration() {

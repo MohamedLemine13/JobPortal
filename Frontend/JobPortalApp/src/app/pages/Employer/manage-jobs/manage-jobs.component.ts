@@ -1,13 +1,13 @@
 import { Component, signal, computed, OnInit } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { trigger, transition, style, animate } from '@angular/animations';
-import { 
-  LucideAngularModule, 
-  Briefcase, 
-  LayoutDashboard, 
-  Plus, 
-  FileText, 
-  Building2, 
+import {
+  LucideAngularModule,
+  Briefcase,
+  LayoutDashboard,
+  Plus,
+  FileText,
+  Building2,
   LogOut,
   Search,
   Users,
@@ -22,14 +22,20 @@ import {
   CircleX,
   Menu,
   Mail,
-  Edit3
+  Edit3,
+  Eye,
+  MapPin,
+  Calendar,
+  DollarSign
 } from 'lucide-angular';
 import { AuthService } from '../../../services/auth.service';
 import { JobService } from '../../../services/job.service';
+import { ProfileService } from '../../../services/profile.service';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-manage-jobs',
-  imports: [RouterLink, RouterLinkActive, LucideAngularModule],
+  imports: [RouterLink, RouterLinkActive, LucideAngularModule, DatePipe],
   templateUrl: './manage-jobs.component.html',
   animations: [
     trigger('fadeInUp', [
@@ -80,31 +86,59 @@ export class ManageJobsComponent implements OnInit {
   readonly Menu = Menu;
   readonly Mail = Mail;
   readonly Edit3 = Edit3;
+  readonly Eye = Eye;
+  readonly MapPin = MapPin;
+  readonly Calendar = Calendar;
+  readonly DollarSign = DollarSign;
 
   constructor(
-    private authService: AuthService, 
+    private authService: AuthService,
     private router: Router,
-    private jobService: JobService
-  ) {}
+    private jobService: JobService,
+    private profileService: ProfileService
+  ) { }
 
   ngOnInit(): void {
+    if (!this.authService.getToken()) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    // Load user profile with avatar
+    this.loadUserProfile();
+
+    // Subscribe to user changes
     this.authService.currentUser$.subscribe(user => {
       if (user) {
         this.user.update(u => ({
           ...u,
-          name: user.fullName || u.name,
-          email: user.email || u.email,
-          role: user.role === 'employer' ? 'Employer' : 'Job Seeker'
+          name: user.fullName,
+          email: user.email
         }));
       }
     });
 
-    if (!this.authService.getToken()) {
-        this.router.navigate(['/login']);
-    } else {
-        this.authService.fetchProfile().subscribe();
-        this.fetchJobs();
-    }
+    this.fetchJobs();
+  }
+
+  loadUserProfile() {
+    this.profileService.getProfile().subscribe({
+      next: (response: any) => {
+        const data = response.data || response;
+        const profile = data.profile || {};
+        const userInfo = data.user || {};
+
+        const avatarUrl = this.profileService.getFileUrl(profile.avatar);
+
+        this.user.set({
+          name: profile.fullName || profile.companyName || userInfo.email || 'User',
+          email: userInfo.email || '',
+          role: 'Employer',
+          avatar: avatarUrl
+        });
+      },
+      error: (err) => console.error('Failed to load profile', err)
+    });
   }
 
   // Profile dropdown state
@@ -141,10 +175,15 @@ export class ManageJobsComponent implements OnInit {
     visible: false
   });
 
+  // Preview modal state
+  isPreviewOpen = signal(false);
+  previewJob = signal<any>(null);
+  isLoadingPreview = signal(false);
+
   // User info
   user = signal({
-    name: 'John Davis',
-    email: 'f@gmail.com',
+    name: '',
+    email: '',
     role: 'Employer',
     avatar: null as string | null
   });
@@ -172,55 +211,51 @@ export class ManageJobsComponent implements OnInit {
   fetchJobs() {
     console.log('Fetching employer jobs...');
     this.jobService.getEmployerJobs().subscribe({
-        next: (response: any) => {
-            console.log('Raw API Response:', response);
-            // Handle wrapped response (ApiResponse wrapper)
-            const data = response.data || response;
-            console.log('Extracted data:', data);
-            
-            const jobsArray = data.jobs || data.content || [];
-            console.log('Jobs array:', jobsArray);
-            
-            if (jobsArray.length > 0) {
-                // Map backend DTO to frontend structure
-                const mappedJobs = jobsArray.map((j: any) => ({
-                    id: j.id,
-                    title: j.title,
-                    author: j.company?.name || 'Me',
-                    status: (j.status || 'active').toLowerCase() === 'active' ? 'active' : (j.status || '').toLowerCase(),
-                    applicants: j.applicantsCount || 0,
-                    location: j.location,
-                    views: j.viewsCount || 0
-                }));
-                console.log('Mapped jobs:', mappedJobs);
-                this.jobs.set(mappedJobs);
-            } else {
-                console.log('No jobs found in response');
-            }
-        },
-        error: (err: any) => console.error('Failed to fetch employer jobs', err)
+      next: (response: any) => {
+        console.log('Raw API Response:', response);
+        // Handle wrapped response (ApiResponse wrapper)
+        const data = response.data || response;
+        console.log('Extracted data:', data);
+
+        const jobsArray = data.jobs || data.content || [];
+        console.log('Jobs array:', jobsArray);
+
+        // Map backend DTO to frontend structure
+        const mappedJobs = jobsArray.map((j: any) => ({
+          id: j.id,
+          title: j.title,
+          author: j.company?.name || 'Me',
+          status: (j.status || 'active').toLowerCase(),
+          applicants: j.applicantsCount || 0,
+          location: j.location,
+          views: j.viewsCount || 0
+        }));
+        console.log('Mapped jobs:', mappedJobs);
+        this.jobs.set(mappedJobs);
+      },
+      error: (err: any) => console.error('Failed to fetch employer jobs', err)
     });
   }
 
   // Computed filtered and sorted jobs
   filteredJobs = computed(() => {
     let result = this.jobs();
-    
+
     // Filter by search
     const query = this.searchQuery().toLowerCase();
     if (query) {
-      result = result.filter(job => 
+      result = result.filter(job =>
         job.title.toLowerCase().includes(query) ||
         job.author.toLowerCase().includes(query)
       );
     }
-    
+
     // Filter by status
     const status = this.statusFilter();
     if (status !== 'all') {
       result = result.filter(job => job.status === status);
     }
-    
+
     // Sort
     const column = this.sortColumn();
     const direction = this.sortDirection();
@@ -235,7 +270,7 @@ export class ManageJobsComponent implements OnInit {
       }
       return direction === 'asc' ? comparison : -comparison;
     });
-    
+
     return result;
   });
 
@@ -260,30 +295,65 @@ export class ManageJobsComponent implements OnInit {
     }
   }
 
-  editJob(jobId: number) {
+  editJob(jobId: string) {
     console.log('Edit job:', jobId);
+    // TODO: Navigate to edit job page or open modal
   }
 
-  closeJob(jobId: number) {
+  closeJob(jobId: string) {
     const job = this.jobs().find(j => j.id === jobId);
-    this.jobs.update(jobs => 
-      jobs.map(j => j.id === jobId ? { ...j, status: 'closed' } : j)
-    );
-    this.showToast(`"${job?.title}" has been closed`, 'info');
+    if (!job) return;
+
+    this.jobService.closeJob(jobId).subscribe({
+      next: () => {
+        this.jobs.update(jobs =>
+          jobs.map(j => j.id === jobId ? { ...j, status: 'closed' } : j)
+        );
+        this.showToast(`"${job.title}" has been closed`, 'info');
+      },
+      error: (err) => {
+        console.error('Failed to close job', err);
+        this.showToast('Failed to close job. Please try again.', 'error');
+      }
+    });
   }
 
-  activateJob(jobId: number) {
+  activateJob(jobId: string) {
     const job = this.jobs().find(j => j.id === jobId);
-    this.jobs.update(jobs => 
-      jobs.map(j => j.id === jobId ? { ...j, status: 'active' } : j)
-    );
-    this.showToast(`"${job?.title}" has been activated`, 'success');
+    if (!job) return;
+
+    this.jobService.activateJob(jobId).subscribe({
+      next: () => {
+        this.jobs.update(jobs =>
+          jobs.map(j => j.id === jobId ? { ...j, status: 'active' } : j)
+        );
+        this.showToast(`"${job.title}" has been activated`, 'success');
+      },
+      error: (err) => {
+        console.error('Failed to activate job', err);
+        this.showToast('Failed to activate job. Please try again.', 'error');
+      }
+    });
   }
 
-  deleteJob(jobId: number) {
+  deleteJob(jobId: string) {
     const job = this.jobs().find(j => j.id === jobId);
-    this.jobs.update(jobs => jobs.filter(j => j.id !== jobId));
-    this.showToast(`"${job?.title}" has been removed`, 'error');
+    if (!job) return;
+
+    if (!confirm(`Are you sure you want to delete "${job.title}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    this.jobService.deleteJob(jobId).subscribe({
+      next: () => {
+        this.jobs.update(jobs => jobs.filter(j => j.id !== jobId));
+        this.showToast(`"${job.title}" has been removed`, 'error');
+      },
+      error: (err) => {
+        console.error('Failed to delete job', err);
+        this.showToast('Failed to delete job. Please try again.', 'error');
+      }
+    });
   }
 
   showToast(message: string, type: 'success' | 'error' | 'info') {
@@ -295,5 +365,39 @@ export class ManageJobsComponent implements OnInit {
 
   hideToast() {
     this.toast.update(t => ({ ...t, visible: false }));
+  }
+
+  openPreview(jobId: string) {
+    this.isLoadingPreview.set(true);
+    this.isPreviewOpen.set(true);
+
+    this.jobService.getJob(jobId).subscribe({
+      next: (response: any) => {
+        console.log('Preview job response:', response);
+        const data = response.data || response;
+        const job = data.job || data;
+        this.previewJob.set(job);
+        this.isLoadingPreview.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to load job preview', err);
+        this.isLoadingPreview.set(false);
+        this.closePreview();
+        this.showToast('Failed to load job preview', 'error');
+      }
+    });
+  }
+
+  closePreview() {
+    this.isPreviewOpen.set(false);
+    this.previewJob.set(null);
+  }
+
+  getSalaryRange(job: any): string {
+    if (job.salaryMin && job.salaryMax) {
+      const currency = job.salaryCurrency || 'USD';
+      return `${currency} ${job.salaryMin.toLocaleString()} - ${job.salaryMax.toLocaleString()} per year`;
+    }
+    return 'Not specified';
   }
 }

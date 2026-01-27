@@ -29,6 +29,7 @@ public class ApplicationService {
 
     private final ApplicationRepository applicationRepository;
     private final JobRepository jobRepository;
+    private final UserRepository userRepository;
     private final JobSeekerProfileRepository jobSeekerProfileRepository;
     private final EmployerProfileRepository employerProfileRepository;
     private final SecurityUtils securityUtils;
@@ -62,20 +63,23 @@ public class ApplicationService {
             throw new ConflictException("You have already applied to this job");
         }
 
-        // Get applicant profile for CV
-        JobSeekerProfile profile = jobSeekerProfileRepository.findByUserId(applicantId)
-                .orElseThrow(() -> new ResourceNotFoundException("Complete your profile before applying"));
+        // Get applicant user
+        User applicant = userRepository.findById(applicantId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", applicantId));
 
-        if (profile.getCvFileUrl() == null) {
-            throw new BadRequestException("You must upload a CV before applying");
+        // Get applicant profile for CV (optional)
+        String cvUrl = null;
+        JobSeekerProfile profile = jobSeekerProfileRepository.findByUserId(applicantId).orElse(null);
+        if (profile != null && profile.getCvFileUrl() != null) {
+            cvUrl = profile.getCvFileUrl();
         }
 
         // Create application
         Application application = Application.builder()
                 .job(job)
-                .applicant(profile.getUser()) // Access user properly
+                .applicant(applicant)
                 .coverLetter(request.getCoverLetter())
-                .cvUrl(profile.getCvFileUrl())
+                .cvUrl(cvUrl)
                 .status(ApplicationStatus.PENDING)
                 .appliedAt(java.time.LocalDateTime.now())
                 .build();
@@ -104,6 +108,23 @@ public class ApplicationService {
         } else {
             applicationsPage = applicationRepository.findByApplicantId(applicantId, pageable);
         }
+
+        List<ApplicationDto> applicationDtos = applicationsPage.getContent().stream()
+                .map(this::mapToApplicationDto)
+                .collect(Collectors.toList());
+
+        return ApplicationListResponse.builder()
+                .applications(applicationDtos)
+                .pagination(PaginationResponse.of(page, limit, applicationsPage.getTotalElements()))
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public ApplicationListResponse getEmployerApplications(int page, int limit) {
+        UUID employerId = securityUtils.getCurrentUserId();
+        Pageable pageable = PageRequest.of(page - 1, limit, Sort.by(Sort.Direction.DESC, "appliedAt"));
+
+        Page<Application> applicationsPage = applicationRepository.findByEmployerId(employerId, pageable);
 
         List<ApplicationDto> applicationDtos = applicationsPage.getContent().stream()
                 .map(this::mapToApplicationDto)
@@ -189,6 +210,7 @@ public class ApplicationService {
                 .title(job.getTitle())
                 .company(companyInfo)
                 .location(job.getLocation())
+                .employerId(job.getEmployer() != null ? job.getEmployer().getId().toString() : null)
                 .build();
 
         ApplicationDto.ApplicantInfo applicantInfo = null;
@@ -200,9 +222,21 @@ public class ApplicationService {
                 applicantInfo = ApplicationDto.ApplicantInfo.builder()
                         .id(applicantProfile.getId().toString())
                         .fullName(applicantProfile.getFullName())
+                        .email(application.getApplicant().getEmail())
+                        .phone(applicantProfile.getPhone())
                         .avatar(applicantProfile.getAvatarUrl())
                         .location(applicantProfile.getLocation())
+                        .bio(applicantProfile.getBio())
                         .skills(applicantProfile.getSkills())
+                        .build();
+            } else {
+                // Fallback when profile doesn't exist - use email as name
+                String email = application.getApplicant().getEmail();
+                String displayName = email.contains("@") ? email.substring(0, email.indexOf("@")) : email;
+                applicantInfo = ApplicationDto.ApplicantInfo.builder()
+                        .id(application.getApplicant().getId().toString())
+                        .fullName(displayName)
+                        .email(email)
                         .build();
             }
         }

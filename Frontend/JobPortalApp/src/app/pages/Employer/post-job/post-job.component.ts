@@ -1,13 +1,13 @@
 import { Component, signal, computed, OnInit } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { trigger, transition, style, animate } from '@angular/animations';
-import { 
-  LucideAngularModule, 
-  Briefcase, 
-  LayoutDashboard, 
-  Plus, 
-  FileText, 
-  Building2, 
+import {
+  LucideAngularModule,
+  Briefcase,
+  LayoutDashboard,
+  Plus,
+  FileText,
+  Building2,
   LogOut,
   MapPin,
   Users,
@@ -20,10 +20,13 @@ import {
   Menu,
   X,
   Mail,
-  Edit3
+  Edit3,
+  CircleCheck,
+  CircleX
 } from 'lucide-angular';
 import { JobService } from '../../../services/job.service';
 import { AuthService } from '../../../services/auth.service';
+import { ProfileService } from '../../../services/profile.service';
 import { CreateJobRequest } from '../../../models/job.models';
 import { FormsModule } from '@angular/forms';
 
@@ -53,6 +56,24 @@ import { FormsModule } from '@angular/forms';
       transition(':leave', [
         animate('0.3s ease-in', style({ transform: 'translateX(-100%)' }))
       ])
+    ]),
+    trigger('toastSlide', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateX(100%)' }),
+        animate('0.3s ease-out', style({ opacity: 1, transform: 'translateX(0)' }))
+      ]),
+      transition(':leave', [
+        animate('0.3s ease-in', style({ opacity: 0, transform: 'translateX(100%)' }))
+      ])
+    ]),
+    trigger('successModal', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'scale(0.8)' }),
+        animate('0.4s ease-out', style({ opacity: 1, transform: 'scale(1)' }))
+      ]),
+      transition(':leave', [
+        animate('0.3s ease-in', style({ opacity: 0, transform: 'scale(0.8)' }))
+      ])
     ])
   ]
 })
@@ -76,30 +97,59 @@ export class PostJobComponent implements OnInit {
   readonly X = X;
   readonly Mail = Mail;
   readonly Edit3 = Edit3;
+  readonly CircleCheck = CircleCheck;
+  readonly CircleX = CircleX;
+
+  // Success modal state
+  isSuccessModalOpen = signal(false);
+  publishedJobTitle = signal('');
 
   constructor(
-    private jobService: JobService, 
+    private jobService: JobService,
     private authService: AuthService,
-    private router: Router
-  ) {}
+    private router: Router,
+    private profileService: ProfileService
+  ) { }
 
   ngOnInit(): void {
+    if (!this.authService.getToken()) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    // Load user profile with avatar
+    this.loadUserProfile();
+
+    // Subscribe to user changes
     this.authService.currentUser$.subscribe(user => {
       if (user) {
         this.user.update(u => ({
           ...u,
-          name: user.fullName || u.name,
-          email: user.email || u.email,
-          role: user.role === 'employer' ? 'Employer' : 'Job Seeker'
+          name: user.fullName,
+          email: user.email
         }));
       }
     });
+  }
 
-    if (!this.authService.getToken()) {
-        this.router.navigate(['/login']);
-    } else {
-        this.authService.fetchProfile().subscribe();
-    }
+  loadUserProfile() {
+    this.profileService.getProfile().subscribe({
+      next: (response: any) => {
+        const data = response.data || response;
+        const profile = data.profile || {};
+        const userInfo = data.user || {};
+
+        const avatarUrl = this.profileService.getFileUrl(profile.avatar);
+
+        this.user.set({
+          name: profile.fullName || profile.companyName || userInfo.email || 'User',
+          email: userInfo.email || '',
+          role: 'Employer',
+          avatar: avatarUrl
+        });
+      },
+      error: (err) => console.error('Failed to load profile', err)
+    });
   }
 
   // Profile dropdown state
@@ -131,8 +181,8 @@ export class PostJobComponent implements OnInit {
 
   // User info
   user = signal({
-    name: 'John Davis',
-    email: 'f@gmail.com',
+    name: '',
+    email: '',
     role: 'Employer',
     avatar: null as string | null
   });
@@ -210,28 +260,28 @@ export class PostJobComponent implements OnInit {
   publishJob() {
     // Validate required fields
     if (!this.jobTitle()) {
-        alert('Please enter a job title');
-        return;
+      alert('Please enter a job title');
+      return;
     }
     if (!this.location()) {
-        alert('Please enter a location');
-        return;
+      alert('Please enter a location');
+      return;
     }
     if (!this.category()) {
-        alert('Please select a category');
-        return;
+      alert('Please select a category');
+      return;
     }
     if (!this.jobType()) {
-        alert('Please select a job type');
-        return;
+      alert('Please select a job type');
+      return;
     }
     if (!this.description()) {
-        alert('Please description the job');
-        return;
+      alert('Please description the job');
+      return;
     }
     if (!this.salaryMin() || !this.salaryMax()) {
-        alert('Please enter a valid salary range');
-        return;
+      alert('Please enter a valid salary range');
+      return;
     }
 
     const request: CreateJobRequest = {
@@ -251,13 +301,22 @@ export class PostJobComponent implements OnInit {
 
     this.jobService.createJob(request).subscribe({
       next: (job) => {
-        alert('Job published successfully!');
-        this.router.navigate(['/employer-dashbord']);
+        this.publishedJobTitle.set(this.jobTitle());
+        this.isSuccessModalOpen.set(true);
+        // Auto-redirect after 3 seconds
+        setTimeout(() => {
+          this.closeSuccessAndNavigate();
+        }, 3000);
       },
       error: (err) => {
         console.error('Failed to publish job', err);
         alert('Failed to publish job. Please check your inputs and try again.');
       }
     });
+  }
+
+  closeSuccessAndNavigate() {
+    this.isSuccessModalOpen.set(false);
+    this.router.navigate(['/employer-dashbord/manage-jobs']);
   }
 }

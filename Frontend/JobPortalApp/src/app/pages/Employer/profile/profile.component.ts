@@ -1,5 +1,5 @@
-import { Component, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Component, signal, OnInit } from '@angular/core';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { 
   LucideAngularModule, 
@@ -20,6 +20,8 @@ import {
   Phone,
   MapPin
 } from 'lucide-angular';
+import { AuthService } from '../../../services/auth.service';
+import { ProfileService } from '../../../services/profile.service';
 
 @Component({
   selector: 'app-profile',
@@ -53,7 +55,48 @@ import {
     ])
   ]
 })
-export class ProfileComponent {
+export class ProfileComponent implements OnInit {
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private profileService: ProfileService
+  ) {}
+
+  ngOnInit(): void {
+    if (!this.authService.getToken()) {
+      this.router.navigate(['/login']);
+      return;
+    }
+    this.loadUserProfile();
+  }
+
+  loadUserProfile() {
+    this.profileService.getProfile().subscribe({
+      next: (response: any) => {
+        const data = response.data || response;
+        const profile = data.profile || {};
+        const userInfo = data.user || {};
+        
+        const avatarUrl = this.profileService.getFileUrl(profile.avatar);
+        
+        this.user.set({
+          name: profile.fullName || profile.companyName || userInfo.email || 'User',
+          email: userInfo.email || '',
+          phone: profile.phone || '',
+          location: profile.location || '',
+          role: 'Employer',
+          avatar: avatarUrl
+        });
+        
+        // Update edit form fields
+        this.editName.set(this.user().name);
+        this.editEmail.set(this.user().email);
+        this.editPhone.set(this.user().phone);
+        this.editLocation.set(this.user().location);
+      },
+      error: (err) => console.error('Failed to load profile', err)
+    });
+  }
   // Icons
   readonly Briefcase = Briefcase;
   readonly LayoutDashboard = LayoutDashboard;
@@ -85,19 +128,19 @@ export class ProfileComponent {
 
   // User profile data
   user = signal({
-    name: 'John Davis',
-    email: 'f@gmail.com',
-    phone: '+1 234 567 890',
-    location: 'New York, USA',
+    name: '',
+    email: '',
+    phone: '',
+    location: '',
     role: 'Employer',
     avatar: null as string | null
   });
 
   // Form fields
-  editName = signal('John Davis');
-  editEmail = signal('f@gmail.com');
-  editPhone = signal('+1 234 567 890');
-  editLocation = signal('New York, USA');
+  editName = signal('');
+  editEmail = signal('');
+  editPhone = signal('');
+  editLocation = signal('');
 
   // Toast notification
   toast = signal<{ message: string; visible: boolean }>({

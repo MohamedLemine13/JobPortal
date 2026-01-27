@@ -29,6 +29,12 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AuthService {
 
+    @org.springframework.beans.factory.annotation.Value("${login.max-attempts:5}")
+    private int maxLoginAttempts;
+
+    @org.springframework.beans.factory.annotation.Value("${login.lockout-duration-minutes:15}")
+    private int lockoutDurationMinutes;
+
     private final UserRepository userRepository;
     private final JobSeekerProfileRepository jobSeekerProfileRepository;
     private final EmployerProfileRepository employerProfileRepository;
@@ -104,19 +110,53 @@ public class AuthService {
 
     @Transactional
     public AuthResponse login(LoginRequest request) {
-        // Authenticate
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
-
-        // Get user
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
-
-        if (!user.getIsVerified()) {
-            throw new UnauthorizedException("Account not verified");
+        // Check if user exists first
+        User user = userRepository.findByEmail(request.getEmail()).orElse(null);
+        
+        if (user == null) {
+            throw new UnauthorizedException("No account found with this email address");
         }
 
-        // Update last login
+        // Check if account is locked
+        if (user.getAccountLockedUntil() != null && LocalDateTime.now().isBefore(user.getAccountLockedUntil())) {
+            long minutesRemaining = java.time.Duration.between(LocalDateTime.now(), user.getAccountLockedUntil()).toMinutes() + 1;
+            throw new UnauthorizedException("Account is locked. Please try again in " + minutesRemaining + " minute(s)");
+        }
+
+        // Reset lock if expired
+        if (user.getAccountLockedUntil() != null && LocalDateTime.now().isAfter(user.getAccountLockedUntil())) {
+            user.setAccountLockedUntil(null);
+            user.setFailedLoginAttempts(0);
+        }
+
+        // Authenticate
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+        } catch (org.springframework.security.core.AuthenticationException e) {
+            // Increment failed attempts
+            int attempts = (user.getFailedLoginAttempts() == null ? 0 : user.getFailedLoginAttempts()) + 1;
+            user.setFailedLoginAttempts(attempts);
+            
+            int remainingAttempts = maxLoginAttempts - attempts;
+            
+            if (attempts >= maxLoginAttempts) {
+                user.setAccountLockedUntil(LocalDateTime.now().plusMinutes(lockoutDurationMinutes));
+                userRepository.save(user);
+                throw new UnauthorizedException("Too many failed attempts. Account locked for " + lockoutDurationMinutes + " minutes");
+            }
+            
+            userRepository.save(user);
+            throw new UnauthorizedException("Incorrect password. " + remainingAttempts + " attempt(s) remaining");
+        }
+
+        if (!user.getIsVerified()) {
+            throw new UnauthorizedException("Account not verified. Please check your email");
+        }
+
+        // Reset failed attempts on successful login
+        user.setFailedLoginAttempts(0);
+        user.setAccountLockedUntil(null);
         user.setLastLoginAt(LocalDateTime.now());
         userRepository.save(user);
 
@@ -164,6 +204,21 @@ public class AuthService {
     public void logout(UUID userId) {
         // Revoke all refresh tokens for user
         refreshTokenRepository.revokeAllByUserId(userId, LocalDateTime.now());
+    }
+
+    @Transactional
+    public void changePassword(UUID userId, String currentPassword, String newPassword) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UnauthorizedException("User not found"));
+
+        // Verify current password
+        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            throw new BadRequestException("Current password is incorrect");
+        }
+
+        // Update password
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
     }
 
     private String generateAndSaveRefreshToken(User user) {

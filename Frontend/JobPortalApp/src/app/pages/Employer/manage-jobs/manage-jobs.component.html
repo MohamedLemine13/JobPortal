@@ -308,6 +308,11 @@
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-2">
+                                        <button (click)="openPreview(job.id)"
+                                            class="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                                            title="Preview">
+                                            <lucide-icon [img]="Eye" class="w-4 h-4"></lucide-icon>
+                                        </button>
                                         <button (click)="editJob(job.id)"
                                             class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                             title="Edit">
@@ -358,6 +363,145 @@
             </div>
         </div>
     </main>
+
+    <!-- Job Preview Modal -->
+    @if (isPreviewOpen()) {
+    <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" (click)="closePreview()">
+        <div class="bg-white rounded-2xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+            (click)="$event.stopPropagation()">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between p-6 border-b border-gray-100 sticky top-0 bg-white z-10">
+                <h2 class="text-2xl font-bold text-gray-900">Job Preview</h2>
+                <button (click)="closePreview()" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                    <lucide-icon [img]="X" class="w-5 h-5 text-gray-500"></lucide-icon>
+                </button>
+            </div>
+
+            <!-- Modal Content -->
+            @if (isLoadingPreview()) {
+            <div class="p-12 flex flex-col items-center justify-center">
+                <div class="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+                <p class="text-gray-500">Loading job details...</p>
+            </div>
+            } @else if (previewJob()) {
+            <div class="p-6 space-y-6">
+                <!-- Header -->
+                <div class="flex items-start justify-between">
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-900">{{ previewJob().title }}</h3>
+                        <div class="flex items-center gap-2 mt-2 text-gray-500">
+                            <lucide-icon [img]="MapPin" class="w-4 h-4"></lucide-icon>
+                            <span>{{ previewJob().location || 'Location not specified' }}</span>
+                        </div>
+                    </div>
+                    <div
+                        class="w-14 h-14 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center">
+                        <lucide-icon [img]="Briefcase" class="w-7 h-7 text-blue-600"></lucide-icon>
+                    </div>
+                </div>
+
+                <!-- Tags -->
+                <div class="flex items-center gap-3 flex-wrap">
+                    @if (previewJob().category) {
+                    <span class="px-4 py-2 bg-green-100 text-green-700 rounded-full text-sm font-medium">{{
+                        previewJob().category }}</span>
+                    }
+                    @if (previewJob().type) {
+                    <span class="px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">{{
+                        previewJob().type
+                        }}</span>
+                    }
+                    <span
+                        class="flex items-center gap-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm font-medium">
+                        <lucide-icon [img]="Calendar" class="w-4 h-4"></lucide-icon>
+                        {{ previewJob().postedAt ? 'Posted ' + (previewJob().postedAt | date:'mediumDate') : 'Posted
+                        recently' }}
+                    </span>
+                    <span class="px-3 py-1 rounded-full text-xs font-medium capitalize"
+                        [class.bg-green-100]="previewJob().status === 'active'"
+                        [class.text-green-700]="previewJob().status === 'active'"
+                        [class.bg-gray-100]="previewJob().status === 'closed'"
+                        [class.text-gray-600]="previewJob().status === 'closed'">
+                        {{ previewJob().status }}
+                    </span>
+                </div>
+
+                <!-- Compensation -->
+                <div class="bg-gradient-to-r from-green-50 to-teal-50 rounded-xl p-5">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center">
+                                <lucide-icon [img]="DollarSign" class="w-5 h-5 text-white"></lucide-icon>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Compensation</p>
+                                <p class="font-semibold text-gray-900">{{ getSalaryRange(previewJob()) }}</p>
+                            </div>
+                        </div>
+                        <span
+                            class="px-4 py-2 bg-teal-100 text-teal-700 rounded-full text-sm font-medium flex items-center gap-1">
+                            <lucide-icon [img]="Users" class="w-4 h-4"></lucide-icon>
+                            {{ previewJob().applicantsCount || 0 }} Applicants
+                        </span>
+                    </div>
+                </div>
+
+                <!-- About This Role -->
+                <div class="border-l-4 border-blue-500 pl-4 overflow-hidden">
+                    <h4 class="text-lg font-bold text-gray-900 mb-3">About This Role</h4>
+                    <p class="text-gray-600 leading-relaxed whitespace-pre-wrap break-words">{{ previewJob().description
+                        || 'No
+                        description provided.' }}</p>
+                </div>
+
+                <!-- Requirements -->
+                @if (previewJob().requirements && previewJob().requirements.length > 0) {
+                <div class="border-l-4 border-purple-500 pl-4 overflow-hidden">
+                    <h4 class="text-lg font-bold text-gray-900 mb-3">What We're Looking For</h4>
+                    <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 overflow-hidden">
+                        <ul class="space-y-2">
+                            @for (req of previewJob().requirements; track req) {
+                            <li class="flex items-start gap-2 text-gray-600">
+                                <lucide-icon [img]="Check"
+                                    class="w-4 h-4 text-purple-600 mt-1 flex-shrink-0"></lucide-icon>
+                                <span>{{ req }}</span>
+                            </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+                }
+
+                <!-- Skills -->
+                @if (previewJob().skills && previewJob().skills.length > 0) {
+                <div>
+                    <h4 class="text-lg font-bold text-gray-900 mb-3">Required Skills</h4>
+                    <div class="flex flex-wrap gap-2">
+                        @for (skill of previewJob().skills; track skill) {
+                        <span class="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">{{ skill
+                            }}</span>
+                        }
+                    </div>
+                </div>
+                }
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-6 border-t border-gray-100 bg-gray-50 flex items-center justify-end gap-3">
+                <button (click)="closePreview()"
+                    class="px-5 py-2.5 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors font-medium">
+                    Close
+                </button>
+                <a [routerLink]="['/employer-dashbord/job', previewJob().id, 'applications']"
+                    class="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium">
+                    <lucide-icon [img]="Users" class="w-4 h-4"></lucide-icon>
+                    View Applications
+                </a>
+            </div>
+            }
+        </div>
+    </div>
+    }
 
     <!-- Toast Notification -->
     @if (toast().visible) {

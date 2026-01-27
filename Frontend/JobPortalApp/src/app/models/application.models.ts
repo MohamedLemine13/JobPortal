@@ -1,6 +1,6 @@
 export interface ApplicationRequest {
   jobId: string;
-  coverLetter: string;
+  coverLetter?: string;
 }
 
 export interface ApplicationResponse {

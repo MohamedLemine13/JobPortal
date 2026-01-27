@@ -34,6 +34,7 @@ public class ApplicationDto {
         private String title;
         private CompanyInfo company;
         private String location;
+        private String employerId;
     }
 
     @Data
@@ -52,8 +53,11 @@ public class ApplicationDto {
     public static class ApplicantInfo {
         private String id;
         private String fullName;
+        private String email;
+        private String phone;
         private String avatar;
         private String location;
+        private String bio;
         private List<String> skills;
     }
 }

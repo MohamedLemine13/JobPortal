@@ -26,43 +26,36 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final CustomUserDetailsService customUserDetailsService;
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        // Skip filter for public file endpoints and uploads
+        return path.startsWith("/api/files/") || 
+               path.startsWith("/uploads/") ||
+               path.startsWith("/api/auth/");
+    }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest request,
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
         try {
             String jwt = getJwtFromRequest(request);
-            System.out.println("DEBUG: JWT found in request: " + (jwt != null ? "YES" : "NO"));
 
             if (StringUtils.hasText(jwt) && !"undefined".equals(jwt) && !"null".equals(jwt)) {
-                System.out.println("DEBUG: Token length: " + jwt.length());
-                String[] parts = jwt.split("\\.");
-                System.out.println("DEBUG: Token parts count: " + parts.length);
-                if (parts.length > 0)
-                    System.out.println("DEBUG: Header: " + parts[0]);
-
-                boolean isValid = jwtTokenProvider.validateToken(jwt);
-                System.out.println("DEBUG: Token validation result: " + isValid);
-
-                if (isValid) {
+                // Validate token and ensure it's an access token (not refresh token)
+                if (jwtTokenProvider.validateToken(jwt) && jwtTokenProvider.isAccessToken(jwt)) {
                     UUID userId = jwtTokenProvider.getUserIdFromToken(jwt);
-                    System.out.println("DEBUG: User ID from token: " + userId);
-
                     UserDetails userDetails = customUserDetailsService.loadUserById(userId);
-                    System.out.println("DEBUG: User loaded: " + userDetails.getUsername() + ", Authorities: "
-                            + userDetails.getAuthorities());
 
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                     SecurityContextHolder.getContext().setAuthentication(authentication);
-                    System.out.println("DEBUG: Authentication set in SecurityContext");
                 }
             }
         } catch (Exception ex) {
             log.error("Could not set user authentication in security context", ex);
-            System.out.println("DEBUG: Authentication Filter Error: " + ex.getMessage());
-            ex.printStackTrace();
         }
 
         filterChain.doFilter(request, response);

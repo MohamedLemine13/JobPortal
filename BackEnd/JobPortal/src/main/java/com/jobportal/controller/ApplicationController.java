@@ -38,6 +38,16 @@ public class ApplicationController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
+    @GetMapping("/employer")
+    @PreAuthorize("hasRole('EMPLOYER')")
+    public ResponseEntity<ApiResponse<ApplicationListResponse>> getEmployerApplications(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int limit) {
+
+        ApplicationListResponse response = applicationService.getEmployerApplications(page, limit);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
     @GetMapping("/job/{jobId}")
     @PreAuthorize("hasRole('EMPLOYER')")
     public ResponseEntity<ApiResponse<ApplicationListResponse>> getJobApplications(

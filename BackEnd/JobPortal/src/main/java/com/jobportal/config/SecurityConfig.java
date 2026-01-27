@@ -53,8 +53,9 @@ public class SecurityConfig {
                         // Health check
                         .requestMatchers("/actuator/**").permitAll()
 
-                        // Static resources (uploads)
+                        // Static resources (uploads) and file API
                         .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers("/api/files/**").permitAll()
 
                         // Employer-only endpoints
                         .requestMatchers("/api/jobs/employer/**").hasRole("EMPLOYER")

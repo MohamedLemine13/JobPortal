@@ -2,9 +2,12 @@ import { Component, signal, computed, ElementRef, ViewChild, AfterViewInit, Inje
 import { isPlatformBrowser } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { trigger, transition, style, animate, state } from '@angular/animations';
-import { LucideAngularModule, Search, MapPin, Calendar, Bookmark, ChevronDown, Grid3x3, List, Building2, ChevronUp, Briefcase, X, Mail, User, Edit2, LogOut } from 'lucide-angular';
+import { LucideAngularModule, Search, MapPin, Calendar, Bookmark, BookmarkCheck, ChevronDown, Grid3x3, List, Building2, ChevronUp, Briefcase, X, Mail, User, Edit2, LogOut } from 'lucide-angular';
 import { JobService } from '../../../services/job.service';
 import { AuthService } from '../../../services/auth.service';
+import { SavedJobService } from '../../../services/saved-job.service';
+import { ApplicationService } from '../../../services/application.service';
+import { ProfileService } from '../../../services/profile.service';
 import { Job as ApiJob } from '../../../models/job.models';
 import { User as AuthUser } from '../../../models/auth.models';
 
@@ -19,7 +22,7 @@ interface Job {
   category: string;
   postedDate: string;
   salary: string;
-  status: 'Apply Now' | 'Applied' | 'Accepted';
+  status: 'Apply Now' | 'Applied' | 'Accepted' | 'Rejected' | 'Interview' | 'Shortlisted';
   bookmarked: boolean;
 }
 
@@ -72,63 +75,157 @@ export class JobSeekerDashboardComponent implements AfterViewInit, OnInit {
     @Inject(PLATFORM_ID) private platformId: Object, 
     private jobService: JobService,
     private authService: AuthService,
-    private router: Router
+    private savedJobService: SavedJobService,
+    private applicationService: ApplicationService,
+    private router: Router,
+    private profileService: ProfileService
   ) {}
 
+  // Icons
+  readonly BookmarkCheck = BookmarkCheck;
+
   ngOnInit(): void {
-    this.loadJobs();
+    if (!this.authService.getToken()) {
+        this.router.navigate(['/login']);
+        return;
+    }
+
+    // Load user profile with avatar
+    this.loadUserProfile();
+    
+    // Subscribe to user changes
     this.authService.currentUser$.subscribe(user => {
       if (user) {
-        this.user.set({
-          name: user.fullName.split(' ')[0], // First name or full name
+        this.user.update(u => ({
+          ...u,
+          name: user.fullName?.split(' ')[0] || user.fullName,
           fullName: user.fullName,
           email: user.email,
-          role: user.role === 'job_seeker' ? 'Job Seeker' : 'Employer',
-          avatar: null
-        });
+          role: user.role === 'job_seeker' ? 'Job Seeker' : 'Employer'
+        }));
       }
     });
 
-    // If no user in state (page refresh), try to fetch it
-    if (!this.authService.getToken()) {
-        this.router.navigate(['/login']);
-    } else {
-         this.authService.fetchProfile().subscribe();
-    }
+    this.loadJobs();
   }
 
-  // ... (keep loadJobs and setupIntersectionObserver)
+  loadUserProfile() {
+    this.profileService.getProfile().subscribe({
+      next: (response: any) => {
+        const data = response.data || response;
+        const profile = data.profile || {};
+        const userInfo = data.user || {};
+        
+        const avatarUrl = this.profileService.getFileUrl(profile.avatar);
+        const fullName = profile.fullName || userInfo.email || 'User';
+        
+        this.user.set({
+          name: fullName.split(' ')[0],
+          fullName: fullName,
+          email: userInfo.email || '',
+          role: userInfo.role === 'job_seeker' ? 'Job Seeker' : 'Employer',
+          avatar: avatarUrl
+        });
+      },
+      error: (err) => console.error('Failed to load profile', err)
+    });
+  }
+
+  // Set to track saved job IDs
+  savedJobIds = signal<Set<string>>(new Set());
+  // Set to track applied job IDs
+  appliedJobIds = signal<Set<string>>(new Set());
+  // Map to track application status by job ID
+  applicationStatusMap = signal<Map<string, string>>(new Map());
 
   loadJobs() {
+    // Fetch saved jobs and applied jobs in parallel, then fetch all jobs
+    this.savedJobService.getSavedJobs().subscribe({
+      next: (response: any) => {
+        const data = response.data || response;
+        const savedJobs = data.savedJobs || [];
+        const savedIds = new Set<string>(savedJobs.map((sj: any) => sj.job?.id || sj.id));
+        this.savedJobIds.set(savedIds);
+      },
+      error: () => {}
+    });
+
+    // Fetch applied jobs with their statuses
+    this.applicationService.getMyApplications().subscribe({
+      next: (response: any) => {
+        const data = response.data || response;
+        const applications = data.applications || [];
+        
+        // Create a map of jobId -> application status
+        const applicationStatusMap = new Map<string, string>();
+        applications.forEach((app: any) => {
+          const jobId = app.job?.id || app.jobId || '';
+          applicationStatusMap.set(jobId, app.status || 'pending');
+        });
+        this.applicationStatusMap.set(applicationStatusMap);
+        
+        const appliedIds = new Set<string>(applications.map((app: any) => app.job?.id || app.jobId || ''));
+        this.appliedJobIds.set(appliedIds);
+        
+        // Now fetch all jobs
+        this.fetchAllJobs();
+      },
+      error: () => {
+        // If fetching applications fails, still load jobs
+        this.fetchAllJobs();
+      }
+    });
+  }
+
+  fetchAllJobs() {
     this.jobService.getJobs().subscribe({
       next: (response: any) => {
         console.log('Jobs API Response:', response);
         
-        // Handle both array response (backend) and wrapped response (expected)
-        const jobsArray = Array.isArray(response) ? response : (response.content || response.data || []);
+        // Backend returns: { data: { jobs: [...], pagination: {...} } }
+        const data = response.data || response;
+        const jobsArray = data.jobs || data.content || (Array.isArray(data) ? data : []);
         console.log('Jobs array length:', jobsArray.length);
         
+        const savedIds = this.savedJobIds();
+        const appliedIds = this.appliedJobIds();
+        
         const mappedJobs: Job[] = jobsArray.map((apiJob: any) => {
-          console.log('Mapping job:', apiJob);
+          // Format salary display
+          let salaryDisplay = 'Competitive';
+          if (apiJob.salaryMin && apiJob.salaryMax) {
+            const currency = apiJob.salaryCurrency || '$';
+            salaryDisplay = `${currency}${apiJob.salaryMin.toLocaleString()} - ${currency}${apiJob.salaryMax.toLocaleString()}`;
+            if (apiJob.salaryPeriod) {
+              salaryDisplay += ` / ${apiJob.salaryPeriod}`;
+            }
+          }
+          
+          const jobId = apiJob.id?.toString() || '';
+          const hasApplied = appliedIds.has(jobId);
+          const applicationStatusMap = this.applicationStatusMap();
+          const appStatus = applicationStatusMap.get(jobId);
+          
+          // Determine display status based on application status
+          let displayStatus: Job['status'] = 'Apply Now';
+          if (hasApplied) {
+            displayStatus = this.mapApplicationStatus(appStatus);
+          }
+          
           return {
-            id: apiJob.id?.toString() || '',
+            id: jobId,
             title: apiJob.title || 'Untitled',
-            // Backend: employer is a relation object, try to get company name
-            company: apiJob.employer?.companyName || apiJob.employer?.user?.fullName || apiJob.companyName || 'Unknown Company',
-            companyLogo: null,
+            company: apiJob.company?.name || 'Unknown Company',
+            companyLogo: apiJob.company?.logo || null,
             logoColor: 'bg-blue-600',
             location: apiJob.location || 'Remote',
-            // Backend uses typeContrat field
-            type: this.formatJobType(apiJob.typeContrat || apiJob.type || 'FULL_TIME'),
-            // Backend: category is a relation object
-            category: apiJob.category?.name || 'General',
-            postedDate: apiJob.createdAt ? new Date(apiJob.createdAt).toLocaleDateString() : 
-                        apiJob.postedAt ? new Date(apiJob.postedAt).toLocaleDateString() : 'Recently',
-            // Backend uses salaryRange as a string
-            salary: apiJob.salaryRange || 'Competitive',
-            status: 'Apply Now',
-            bookmarked: false
-          };
+            type: this.formatJobType(apiJob.type || 'full_time'),
+            category: apiJob.category || 'General',
+            postedDate: apiJob.postedAt ? new Date(apiJob.postedAt).toLocaleDateString() : 'Recently',
+            salary: salaryDisplay,
+            status: displayStatus,
+            bookmarked: savedIds.has(jobId)
+          } as Job;
         });
         
         console.log('Mapped jobs:', mappedJobs);
@@ -138,9 +235,27 @@ export class JobSeekerDashboardComponent implements AfterViewInit, OnInit {
     });
   }
 
+  private mapApplicationStatus(status: string | undefined): Job['status'] {
+    if (!status) return 'Applied';
+    const statusMap: Record<string, Job['status']> = {
+      'pending': 'Applied',
+      'reviewed': 'Applied',
+      'shortlisted': 'Shortlisted',
+      'interview': 'Interview',
+      'hired': 'Accepted',
+      'rejected': 'Rejected'
+    };
+    return statusMap[status.toLowerCase()] || 'Applied';
+  }
+
   private formatJobType(type: string): string {
-    // Convert backend format to display format
+    // Convert backend format to display format (handle both cases)
     const typeMap: Record<string, string> = {
+      'full_time': 'Full-Time',
+      'part_time': 'Part-Time',
+      'contract': 'Contract',
+      'internship': 'Internship',
+      'remote': 'Remote',
       'FULL_TIME': 'Full-Time',
       'PART_TIME': 'Part-Time',
       'CONTRACT': 'Contract',
@@ -150,7 +265,7 @@ export class JobSeekerDashboardComponent implements AfterViewInit, OnInit {
       'CDD': 'Contract',
       'STAGE': 'Internship'
     };
-    return typeMap[type?.toUpperCase()] || type || 'Full-Time';
+    return typeMap[type] || typeMap[type?.toUpperCase()] || type || 'Full-Time';
   }
 
   ngAfterViewInit(): void {
@@ -321,12 +436,45 @@ export class JobSeekerDashboardComponent implements AfterViewInit, OnInit {
     );
   }
 
-  toggleBookmark(jobId: string) {
-    this.jobs.update(jobs =>
-      jobs.map(job =>
-        job.id === jobId ? { ...job, bookmarked: !job.bookmarked } : job
-      )
-    );
+  toggleBookmark(jobId: string, event: Event) {
+    event.stopPropagation(); // Prevent navigating to job details
+    
+    const job = this.jobs().find(j => j.id === jobId);
+    if (!job) return;
+
+    if (job.bookmarked) {
+      // Unsave the job
+      this.savedJobService.unsaveJob(jobId).subscribe({
+        next: () => {
+          this.jobs.update(jobs =>
+            jobs.map(j => j.id === jobId ? { ...j, bookmarked: false } : j)
+          );
+          // Update savedJobIds set
+          this.savedJobIds.update(ids => {
+            const newIds = new Set(ids);
+            newIds.delete(jobId);
+            return newIds;
+          });
+        },
+        error: (err) => console.error('Failed to unsave job', err)
+      });
+    } else {
+      // Save the job
+      this.savedJobService.saveJob(jobId).subscribe({
+        next: () => {
+          this.jobs.update(jobs =>
+            jobs.map(j => j.id === jobId ? { ...j, bookmarked: true } : j)
+          );
+          // Update savedJobIds set
+          this.savedJobIds.update(ids => {
+            const newIds = new Set(ids);
+            newIds.add(jobId);
+            return newIds;
+          });
+        },
+        error: (err) => console.error('Failed to save job', err)
+      });
+    }
   }
 
   clearAllFilters() {
@@ -339,11 +487,29 @@ export class JobSeekerDashboardComponent implements AfterViewInit, OnInit {
   }
 
   applyForJob(jobId: string) {
-    this.jobs.update(jobs =>
-      jobs.map(job =>
-        job.id === jobId ? { ...job, status: 'Applied' as const } : job
-      )
-    );
+    // Check if already applied
+    if (this.appliedJobIds().has(jobId)) return;
+    
+    this.applicationService.applyForJob({ jobId }).subscribe({
+      next: () => {
+        // Update the job status in the list
+        this.jobs.update(jobs =>
+          jobs.map(job =>
+            job.id === jobId ? { ...job, status: 'Applied' as const } : job
+          )
+        );
+        // Update appliedJobIds set
+        this.appliedJobIds.update(ids => {
+          const newIds = new Set(ids);
+          newIds.add(jobId);
+          return newIds;
+        });
+      },
+      error: (err) => {
+        console.error('Failed to apply for job', err);
+        alert(err.error?.message || 'Failed to apply. Please try again.');
+      }
+    });
   }
 
   getTypeColor(type: string): string {
@@ -355,5 +521,16 @@ export class JobSeekerDashboardComponent implements AfterViewInit, OnInit {
       'Internship': 'bg-pink-100 text-pink-700'
     };
     return colors[type] || 'bg-gray-100 text-gray-700';
+  }
+
+  getStatusColor(status: string): string {
+    const colors: Record<string, string> = {
+      'Applied': 'bg-blue-50 text-blue-600 border-blue-100',
+      'Shortlisted': 'bg-purple-50 text-purple-600 border-purple-100',
+      'Interview': 'bg-indigo-50 text-indigo-600 border-indigo-100',
+      'Accepted': 'bg-green-50 text-green-600 border-green-100',
+      'Rejected': 'bg-red-50 text-red-600 border-red-100'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-600 border-gray-100';
   }
 }

@@ -12,6 +12,52 @@
                 <p class="text-gray-500 mt-2">Sign in to your JobPortal account</p>
             </header>
 
+            <!-- Error Message -->
+            @if (errorMessage()) {
+                <div 
+                    class="mb-6 p-4 rounded-xl border transition-all duration-300"
+                    [class]="isLockoutError() 
+                        ? 'bg-red-50 border-red-200' 
+                        : isAttemptsWarning() 
+                            ? 'bg-amber-50 border-amber-200' 
+                            : 'bg-red-50 border-red-200'"
+                    [@errorSlideIn]
+                    [@shake]="shakeState()"
+                >
+                    <div class="flex items-start gap-3">
+                        <div [class]="isLockoutError() ? 'text-red-500' : isAttemptsWarning() ? 'text-amber-500' : 'text-red-500'">
+                            <lucide-icon [img]="AlertCircle" class="w-5 h-5 mt-0.5"></lucide-icon>
+                        </div>
+                        <div class="flex-1">
+                            <p [class]="isLockoutError() 
+                                ? 'text-red-800 font-medium' 
+                                : isAttemptsWarning() 
+                                    ? 'text-amber-800 font-medium' 
+                                    : 'text-red-800 font-medium'"
+                            >
+                                {{ errorMessage() }}
+                            </p>
+                            @if (isLockoutError()) {
+                                <p class="text-red-600 text-sm mt-1">Please wait before trying again.</p>
+                            }
+                            @if (isAttemptsWarning()) {
+                                <p class="text-amber-600 text-sm mt-1">Please check your password carefully.</p>
+                            }
+                            @if (!isLockoutError() && !isAttemptsWarning()) {
+                                <p class="text-red-600 text-sm mt-1">Please check your credentials and try again.</p>
+                            }
+                        </div>
+                        <button 
+                            type="button" 
+                            (click)="clearError()"
+                            class="text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                            <lucide-icon [img]="XCircle" class="w-5 h-5"></lucide-icon>
+                        </button>
+                    </div>
+                </div>
+            }
+
             <!-- Form -->
             <form (ngSubmit)="onSubmit()" class="space-y-6">
                 <!-- Email Field -->

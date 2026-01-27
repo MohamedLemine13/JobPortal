@@ -281,7 +281,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <button (click)="$event.stopPropagation(); toggleBookmark(job.id)"
+                            <button (click)="toggleBookmark(job.id, $event)"
                                 class="p-1 hover:bg-gray-50 rounded-lg transition-colors flex-shrink-0">
                                 <lucide-icon [img]="Bookmark"
                                     [class]="job.bookmarked ? 'w-5 h-5 text-blue-600 fill-blue-600' : 'w-5 h-5 text-gray-300'"></lucide-icon>
@@ -319,9 +319,7 @@
                                 Apply Now
                             </button>
                             } @else {
-                            <span [class]="job.status === 'Accepted' 
-                                            ? 'px-5 py-2 bg-gray-100 text-gray-600 text-sm font-medium rounded-lg'
-                                            : 'px-5 py-2 bg-gray-100 text-gray-600 text-sm font-medium rounded-lg'">
+                            <span [class]="'px-5 py-2 text-sm font-medium rounded-lg border ' + getStatusColor(job.status)">
                                 {{ job.status }}
                             </span>
                             }
@@ -356,7 +354,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <button (click)="$event.stopPropagation(); toggleBookmark(job.id)"
+                            <button (click)="toggleBookmark(job.id, $event)"
                                 class="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
                                 <lucide-icon [img]="Bookmark"
                                     [class]="job.bookmarked ? 'w-5 h-5 text-blue-600 fill-blue-600' : 'w-5 h-5 text-gray-300'"></lucide-icon>
@@ -394,9 +392,7 @@
                                 Apply Now
                             </button>
                             } @else {
-                            <span [class]="job.status === 'Accepted' 
-                                            ? 'px-5 py-2 bg-green-50 text-green-600 text-sm font-medium rounded-full border border-green-100'
-                                            : 'px-5 py-2 bg-gray-100 text-gray-600 text-sm font-medium rounded-full'">
+                            <span [class]="'px-5 py-2 text-sm font-medium rounded-full border ' + getStatusColor(job.status)">
                                 {{ job.status }}
                             </span>
                             }

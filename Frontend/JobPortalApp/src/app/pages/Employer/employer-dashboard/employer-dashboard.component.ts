@@ -24,6 +24,8 @@ import {
 } from 'lucide-angular';
 import { AuthService } from '../../../services/auth.service';
 import { JobService } from '../../../services/job.service';
+import { ApplicationService } from '../../../services/application.service';
+import { ProfileService } from '../../../services/profile.service';
 
 @Component({
   selector: 'app-employer-dashboard',
@@ -58,27 +60,57 @@ export class EmployerDashboardComponent implements OnInit {
   constructor(
     private authService: AuthService, 
     private router: Router,
-    private jobService: JobService
+    private jobService: JobService,
+    private applicationService: ApplicationService,
+    private profileService: ProfileService
   ) {}
 
   ngOnInit(): void {
+    if (!this.authService.getToken()) {
+        this.router.navigate(['/login']);
+        return;
+    }
+
+    // Load user profile with avatar
+    this.loadUserProfile();
+    
+    // Subscribe to user changes
     this.authService.currentUser$.subscribe(user => {
       if (user) {
-        this.user.set({
+        this.user.update(u => ({
+          ...u,
           name: user.fullName,
-          email: user.email,
-          role: 'Employer',
-          avatar: null
-        });
+          email: user.email
+        }));
       }
     });
 
-    if (!this.authService.getToken()) {
-        this.router.navigate(['/login']);
-    } else {
-        this.authService.fetchProfile().subscribe();
-        this.fetchDashboardData();
-    }
+    this.fetchDashboardData();
+  }
+
+  loadUserProfile() {
+    this.profileService.getProfile().subscribe({
+      next: (response: any) => {
+        console.log('Profile response:', response);
+        const data = response.data || response;
+        const profile = data.profile || {};
+        const userInfo = data.user || {};
+        
+        console.log('Profile data:', profile);
+        console.log('Avatar from profile:', profile.avatar);
+        
+        const avatarUrl = this.profileService.getFileUrl(profile.avatar);
+        console.log('Constructed avatar URL:', avatarUrl);
+        
+        this.user.set({
+          name: profile.fullName || profile.companyName || userInfo.email || 'User',
+          email: userInfo.email || '',
+          role: 'Employer',
+          avatar: avatarUrl
+        });
+      },
+      error: (err) => console.error('Failed to load profile', err)
+    });
   }
 
   fetchDashboardData() {
@@ -133,6 +165,54 @@ export class EmployerDashboardComponent implements OnInit {
         }
       },
       error: (err: any) => console.error('Failed to fetch dashboard data', err)
+    });
+
+    // Fetch recent applications
+    this.applicationService.getEmployerApplications(1, 5).subscribe({
+      next: (response: any) => {
+        console.log('Recent applications response:', response);
+        const data = response.data || response;
+        const applications = data.applications || [];
+        
+        const recentApps = applications.slice(0, 3).map((app: any) => {
+          const name = app.applicant?.fullName || 'Unknown';
+          const initials = name.split(' ').map((n: string) => n.charAt(0).toUpperCase()).join('').slice(0, 2);
+          
+          // Calculate time ago
+          let timeAgo = 'Recently';
+          if (app.appliedAt) {
+            const appliedDate = new Date(app.appliedAt);
+            const now = new Date();
+            const diffMs = now.getTime() - appliedDate.getTime();
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            
+            if (diffDays > 0) {
+              timeAgo = `${diffDays}d ago`;
+            } else if (diffHours > 0) {
+              timeAgo = `${diffHours}h ago`;
+            } else {
+              timeAgo = 'Just now';
+            }
+          }
+          
+          // Get proper avatar URL using profileService
+          const avatarUrl = this.profileService.getFileUrl(app.applicant?.avatar);
+          
+          return {
+            id: app.id,
+            name: name,
+            initials: initials,
+            position: app.job?.title || 'Unknown Position',
+            timeAgo: timeAgo,
+            status: app.status || 'pending',
+            avatar: avatarUrl
+          };
+        });
+        
+        this.recentApplications.set(recentApps);
+      },
+      error: (err: any) => console.error('Failed to fetch recent applications', err)
     });
   }
 
@@ -248,8 +328,8 @@ export class EmployerDashboardComponent implements OnInit {
   // Recent job posts
   recentJobs = signal<any[]>([]);
 
-  // Recent applications - will be populated from the Manage Jobs page
-  readonly recentApplications = signal<any[]>([]);
+  // Recent applications - populated from backend
+  recentApplications = signal<any[]>([]);
 
   // Quick actions
   readonly quickActions = [

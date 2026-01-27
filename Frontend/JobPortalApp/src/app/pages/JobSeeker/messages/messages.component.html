@@ -154,7 +154,7 @@
                             <div class="flex items-start justify-between gap-2">
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-2">
-                                        <h4 class="font-semibold text-gray-900 truncate">{{ conv.companyName }}</h4>
+                                        <h4 class="font-semibold text-gray-900 truncate">{{ conv.participantName }}</h4>
                                         @if (conv.unreadCount > 0) {
                                         <span
                                             class="flex-shrink-0 w-5 h-5 bg-blue-500 text-white text-xs font-semibold rounded-full flex items-center justify-center">
@@ -188,7 +188,7 @@
                                 <lucide-icon [img]="Building2" class="w-5 h-5 text-blue-600"></lucide-icon>
                             </div>
                             <div>
-                                <h3 class="font-bold text-gray-900">{{ selectedConversation()?.companyName }}</h3>
+                                <h3 class="font-bold text-gray-900">{{ selectedConversation()?.participantName }}</h3>
                                 <p class="text-blue-600 text-sm">{{ selectedConversation()?.jobTitle }}</p>
                             </div>
                         </div>
@@ -251,7 +251,7 @@
                             ←
                         </button>
                         <div>
-                            <h3 class="font-bold text-gray-900">{{ selectedConversation()?.companyName }}</h3>
+                            <h3 class="font-bold text-gray-900">{{ selectedConversation()?.participantName }}</h3>
                             <p class="text-blue-600 text-sm">{{ selectedConversation()?.jobTitle }}</p>
                         </div>
                     </div>

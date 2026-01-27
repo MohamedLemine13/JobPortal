@@ -61,4 +61,11 @@ public class AuthController {
         // In a real app, this would verify token and update password
         return ResponseEntity.ok(ApiResponse.success("Password reset successfully"));
     }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<ApiResponse<Void>> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        UUID userId = securityUtils.getCurrentUserId();
+        authService.changePassword(userId, request.getCurrentPassword(), request.getNewPassword());
+        return ResponseEntity.ok(ApiResponse.success("Password changed successfully"));
+    }
 }

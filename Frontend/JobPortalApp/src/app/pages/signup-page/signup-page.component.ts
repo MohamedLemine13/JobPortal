@@ -98,7 +98,12 @@ export class SignupPageComponent {
         error: (err) => {
             console.error('Registration failed', err);
             this.isLoading.set(false);
-            alert('Registration failed. Please try again.');
+            // Show actual error message from backend
+            const errorMessage = err.error?.error?.message 
+                || err.error?.message 
+                || err.error?.error?.details?.[0]?.message
+                || 'Registration failed. Please check your input.';
+            alert(errorMessage);
         }
     });
   }

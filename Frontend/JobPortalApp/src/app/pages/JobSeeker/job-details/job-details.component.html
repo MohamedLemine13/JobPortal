@@ -116,37 +116,47 @@
 
     <!-- Main Content -->
     <main #mainContent class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        @if (isLoading()) {
+        <div class="flex items-center justify-center py-20">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+        } @else if (job()) {
         <div class="bg-white rounded-[2rem] p-8 shadow-sm mb-6" [@fadeInUp]="mainVisible ? 'visible' : 'hidden'">
             <!-- Header -->
             <div class="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-8" [@scaleIn]="mainVisible ? 'visible' : 'hidden'">
                 <div class="flex items-start gap-5">
                     <!-- Company Logo -->
                     <div
-                        [class]="'w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm ' + job().logoColor">
-                        @if (job().companyLogo) {
-                        <img [src]="job().companyLogo" alt="Company" class="w-full h-full object-cover rounded-2xl" />
+                        [class]="'w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm ' + job()!.logoColor">
+                        @if (job()!.companyLogo) {
+                        <img [src]="job()!.companyLogo" alt="Company" class="w-full h-full object-cover rounded-2xl" />
                         } @else {
                         <lucide-icon [img]="Building2" class="text-white w-8 h-8 opacity-90"></lucide-icon>
                         }
                     </div>
 
                     <div>
-                        <h1 class="text-2xl font-bold text-gray-900 mb-2">{{ job().title }}</h1>
+                        <h1 class="text-2xl font-bold text-gray-900 mb-2">{{ job()!.title }}</h1>
                         <div class="flex items-center gap-2 text-gray-500 text-sm font-medium">
                             <lucide-icon [img]="MapPin" class="w-4 h-4"></lucide-icon>
-                            <span>{{ job().location }}</span>
+                            <span>{{ job()!.location }}</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <button
-                        class="px-8 py-2.5 bg-blue-50 text-blue-600 hover:bg-blue-100 font-medium rounded-xl transition-colors">
-                        Save
+                    <button (click)="toggleSaveJob()" [disabled]="isSaving()"
+                        [class]="job()?.isSaved 
+                            ? 'px-8 py-2.5 bg-blue-600 text-white hover:bg-blue-700 font-medium rounded-xl transition-colors flex items-center gap-2' 
+                            : 'px-8 py-2.5 bg-blue-50 text-blue-600 hover:bg-blue-100 font-medium rounded-xl transition-colors flex items-center gap-2'">
+                        <lucide-icon [img]="job()?.isSaved ? BookmarkCheck : Bookmark" class="w-5 h-5"></lucide-icon>
+                        {{ job()?.isSaved ? 'Saved' : 'Save' }}
                     </button>
-                    <button
-                        class="px-8 py-2.5 bg-blue-600 text-white hover:bg-blue-700 font-medium rounded-xl shadow-lg shadow-blue-600/20 transition-colors">
-                        Apply Now
+                    <button (click)="applyForJob()" [disabled]="isApplying() || job()?.hasApplied"
+                        [class]="job()?.hasApplied 
+                            ? 'px-8 py-2.5 bg-green-600 text-white font-medium rounded-xl shadow-lg shadow-green-600/20 cursor-not-allowed' 
+                            : 'px-8 py-2.5 bg-blue-600 text-white hover:bg-blue-700 font-medium rounded-xl shadow-lg shadow-blue-600/20 transition-colors'">
+                        {{ isApplying() ? 'Applying...' : (job()?.hasApplied ? 'Applied' : 'Apply Now') }}
                     </button>
                 </div>
             </div>
@@ -155,16 +165,16 @@
             <div class="flex flex-wrap gap-3 mb-10" [@fadeInLeft]="mainVisible ? 'visible' : 'hidden'">
                 <span
                     class="px-4 py-2 bg-blue-50 text-blue-600 rounded-full text-sm font-medium border border-blue-100 flex items-center gap-2">
-                    {{ job().category }}
+                    {{ job()!.category }}
                 </span>
                 <span
                     class="px-4 py-2 bg-purple-50 text-purple-600 rounded-full text-sm font-medium border border-purple-100 flex items-center gap-2">
-                    {{ job().type }}
+                    {{ job()!.type }}
                 </span>
                 <span
                     class="px-4 py-2 bg-gray-50 text-gray-500 rounded-full text-sm font-medium border border-gray-100 flex items-center gap-2">
                     <lucide-icon [img]="Clock" class="w-4 h-4"></lucide-icon>
-                    {{ job().postedDate }}
+                    {{ job()!.postedDate }}
                 </span>
             </div>
 
@@ -178,7 +188,7 @@
                     </div>
                     <div>
                         <p class="text-sm text-gray-600 font-medium mb-0.5">Compensation</p>
-                        <p class="text-xl font-bold text-gray-900">{{ job().salary }}</p>
+                        <p class="text-xl font-bold text-gray-900">{{ job()!.salary }}</p>
                     </div>
                 </div>
                 <span
@@ -195,7 +205,7 @@
                     <h2 class="text-lg font-bold text-gray-900">About This Role</h2>
                 </div>
                 <div class="bg-gray-50 rounded-2xl p-6 text-gray-600 leading-relaxed">
-                    {{ job().description }}
+                    {{ job()!.description }}
                 </div>
             </div>
 
@@ -207,7 +217,7 @@
                 </div>
                 <div class="bg-pink-50/50 border border-pink-100 rounded-2xl p-6">
                     <ul class="space-y-3">
-                        @for (req of job().requirements; track req) {
+                        @for (req of job()!.requirements; track req) {
                         <li class="flex items-start gap-3 text-gray-700">
                             <div class="w-1.5 h-1.5 bg-pink-500 rounded-full mt-2 flex-shrink-0"></div>
                             <span>{{ req }}</span>
@@ -217,5 +227,10 @@
                 </div>
             </div>
         </div>
+        } @else {
+        <div class="flex items-center justify-center py-20">
+            <p class="text-gray-500">Job not found</p>
+        </div>
+        }
     </main>
 </div>

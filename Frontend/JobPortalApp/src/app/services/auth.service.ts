@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap, switchMap, map, of } from 'rxjs';
+import { BehaviorSubject, Observable, tap, switchMap, map, of, catchError, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { LoginRequest, RegisterRequest, AuthResponse, User } from '../models/auth.models';
 
@@ -18,8 +18,9 @@ export class AuthService {
     return this.http.post<any>(`${this.apiUrl}/auth/register`, request).pipe(
       tap((response: any) => {
         console.log('Register Response:', response);
-        const token = response.data?.accessToken || response.accessToken;
-        localStorage.setItem('access_token', token);
+        const accessToken = response.data?.accessToken || response.accessToken;
+        const refreshToken = response.data?.refreshToken || response.refreshToken;
+        this.storeTokens(accessToken, refreshToken);
         // After register, we should also fetch profile
         this.fetchProfile().subscribe();
       })
@@ -30,15 +31,31 @@ export class AuthService {
     return this.http.post<any>(`${this.apiUrl}/auth/login`, request).pipe(
       tap((response: any) => {
         console.log('Login Response:', response);
-        const token = response.data?.accessToken || response.accessToken;
-        localStorage.setItem('access_token', token);
+        const accessToken = response.data?.accessToken || response.accessToken;
+        const refreshToken = response.data?.refreshToken || response.refreshToken;
+        this.storeTokens(accessToken, refreshToken);
         this.fetchProfile().subscribe();
       })
     );
   }
 
+  private storeTokens(accessToken: string, refreshToken: string): void {
+    if (accessToken) {
+      localStorage.setItem('access_token', accessToken);
+    }
+    if (refreshToken) {
+      localStorage.setItem('refresh_token', refreshToken);
+    }
+  }
+
   logout(): void {
+    // Call backend logout to revoke refresh tokens
+    this.http.post(`${this.apiUrl}/auth/logout`, {}).pipe(
+      catchError(() => of(null)) // Ignore errors on logout
+    ).subscribe();
+    
     localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
     this.currentUserSubject.next(null);
   }
@@ -49,6 +66,32 @@ export class AuthService {
 
   getToken(): string | null {
     return localStorage.getItem('access_token');
+  }
+
+  getRefreshToken(): string | null {
+    return localStorage.getItem('refresh_token');
+  }
+
+  refreshAccessToken(): Observable<string> {
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) {
+      return throwError(() => new Error('No refresh token available'));
+    }
+
+    return this.http.post<any>(`${this.apiUrl}/auth/refresh`, { refreshToken }).pipe(
+      tap((response: any) => {
+        const newAccessToken = response.data?.accessToken || response.accessToken;
+        if (newAccessToken) {
+          localStorage.setItem('access_token', newAccessToken);
+        }
+      }),
+      map((response: any) => response.data?.accessToken || response.accessToken),
+      catchError((error) => {
+        // If refresh fails, logout the user
+        this.logout();
+        return throwError(() => error);
+      })
+    );
   }
 
   fetchProfile(): Observable<User> {

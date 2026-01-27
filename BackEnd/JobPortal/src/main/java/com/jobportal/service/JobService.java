@@ -344,6 +344,8 @@ public class JobService {
                 .salaryPeriod(job.getSalaryPeriod() != null ? job.getSalaryPeriod().getValue() : null)
                 .postedAt(job.getPostedAt())
                 .applicantsCount(job.getApplicantsCount())
+                .status(job.getStatus().getValue())
+                .viewsCount(job.getViewsCount())
                 .build();
     }
 }

@@ -27,6 +27,8 @@ public class JobListItemDto {
     private String salaryPeriod;
     private LocalDateTime postedAt;
     private Integer applicantsCount;
+    private String status;
+    private Integer viewsCount;
 
     @Data
     @Builder

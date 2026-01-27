@@ -1,13 +1,18 @@
 import { Component, signal, OnInit, inject, ElementRef, ViewChild, AfterViewInit, Inject, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { ActivatedRoute, RouterLink, RouterLinkActive } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { trigger, transition, style, animate, state } from '@angular/animations';
-import { LucideAngularModule, Briefcase, ChevronLeft, ChevronDown, MapPin, Clock, DollarSign, Users, Calendar, Bookmark, Share2, Building2, Mail, User, Edit2, LogOut } from 'lucide-angular';
+import { LucideAngularModule, Briefcase, ChevronLeft, ChevronDown, MapPin, Clock, DollarSign, Users, Calendar, Bookmark, Share2, Building2, Mail, User, Edit2, LogOut, BookmarkCheck } from 'lucide-angular';
+import { JobService } from '../../../services/job.service';
+import { SavedJobService } from '../../../services/saved-job.service';
+import { ApplicationService } from '../../../services/application.service';
+import { AuthService } from '../../../services/auth.service';
 
 interface JobDetails {
   id: string;
   title: string;
   company: string;
+  companyId?: string;
   location: string;
   type: string;
   category: string;
@@ -15,8 +20,13 @@ interface JobDetails {
   salary: string;
   description: string;
   requirements: string[];
+  skills: string[];
+  benefits: string[];
+  experienceLevel: string;
   logoColor: string;
   companyLogo: string | null;
+  hasApplied: boolean;
+  isSaved: boolean;
 }
 
 @Component({
@@ -60,7 +70,14 @@ export class JobDetailsComponent implements OnInit, AfterViewInit {
   mainVisible = false;
   descriptionVisible = false;
 
-  constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
+  constructor(
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private jobService: JobService,
+    private savedJobService: SavedJobService,
+    private applicationService: ApplicationService,
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
   ngAfterViewInit(): void {
     if (isPlatformBrowser(this.platformId)) {
@@ -104,12 +121,18 @@ export class JobDetailsComponent implements OnInit, AfterViewInit {
   readonly Users = Users;
   readonly Calendar = Calendar;
   readonly Bookmark = Bookmark;
+  readonly BookmarkCheck = BookmarkCheck;
   readonly Share2 = Share2;
   readonly Building2 = Building2;
   readonly Mail = Mail;
   readonly User = User;
   readonly Edit2 = Edit2;
   readonly LogOut = LogOut;
+
+  // Loading states
+  isLoading = signal(false);
+  isApplying = signal(false);
+  isSaving = signal(false);
 
   // Profile dropdown state
   isProfileDropdownOpen = signal(false);
@@ -131,30 +154,148 @@ export class JobDetailsComponent implements OnInit, AfterViewInit {
   });
 
 
-  job = signal<JobDetails>({
-    id: '1',
-    title: 'Digital Marketing Specialist',
-    company: 'PixelForge Studios',
-    location: 'London, UK',
-    type: 'Full-Time',
-    category: 'Marketing',
-    postedDate: '5th Jul 2025',
-    salary: '55000 - 80000 per year',
-    description: 'Join our marketing team to develop and implement digital strategies that drive brand awareness and lead generation. You will be responsible for managing campaigns across various channels including social media, email, and search engines.',
-    requirements: [
-      'Bachelor\'s in Marketing, Business, or related field',
-      '2+ years experience in digital marketing',
-      'SEO, SEM, Google Ads expertise',
-      'Strong analytical skills and experience with Google Analytics',
-      'Excellent written and verbal communication skills'
-    ],
-    logoColor: 'bg-purple-600',
-    companyLogo: null // Using placeholder color from screenshot style
-  });
+  job = signal<JobDetails | null>(null);
 
   ngOnInit() {
-    // In a real app, fetch job by ID here
+    // Check authentication
+    if (!this.authService.getToken()) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    // Load user info
+    this.authService.currentUser$.subscribe(user => {
+      if (user) {
+        this.user.set({
+          name: user.fullName?.charAt(0) || 'U',
+          fullName: user.fullName,
+          email: user.email,
+          role: 'Job Seeker',
+          avatar: null
+        });
+      }
+    });
+
+    // Fetch job details
     const id = this.route.snapshot.paramMap.get('id');
-    console.log('Job ID:', id);
+    if (id) {
+      this.loadJobDetails(id);
+    }
+  }
+
+  loadJobDetails(jobId: string) {
+    this.isLoading.set(true);
+    this.jobService.getJob(jobId).subscribe({
+      next: (response: any) => {
+        console.log('Job details response:', response);
+        const data = response.data || response;
+        const jobData = data.job || data;
+        
+        // Format salary
+        let salaryDisplay = 'Competitive';
+        if (jobData.salaryMin && jobData.salaryMax) {
+          const currency = jobData.salaryCurrency || '$';
+          salaryDisplay = `${currency}${jobData.salaryMin.toLocaleString()} - ${currency}${jobData.salaryMax.toLocaleString()}`;
+          if (jobData.salaryPeriod) {
+            salaryDisplay += ` / ${jobData.salaryPeriod}`;
+          }
+        }
+
+        this.job.set({
+          id: jobData.id,
+          title: jobData.title || 'Untitled',
+          company: jobData.company?.name || 'Unknown Company',
+          companyId: jobData.company?.id,
+          location: jobData.location || 'Remote',
+          type: this.formatJobType(jobData.type || 'full_time'),
+          category: jobData.category || 'General',
+          postedDate: jobData.postedAt ? new Date(jobData.postedAt).toLocaleDateString() : 'Recently',
+          salary: salaryDisplay,
+          description: jobData.description || '',
+          requirements: jobData.requirements || [],
+          skills: jobData.skills || [],
+          benefits: jobData.benefits || [],
+          experienceLevel: jobData.experienceLevel || 'Not specified',
+          logoColor: 'bg-blue-600',
+          companyLogo: jobData.company?.logo || null,
+          hasApplied: data.hasApplied || false,
+          isSaved: data.isSaved || false
+        });
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to load job details', err);
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  private formatJobType(type: string): string {
+    const typeMap: Record<string, string> = {
+      'full_time': 'Full-Time',
+      'part_time': 'Part-Time',
+      'contract': 'Contract',
+      'internship': 'Internship',
+      'remote': 'Remote'
+    };
+    return typeMap[type] || typeMap[type?.toLowerCase()] || type || 'Full-Time';
+  }
+
+  // Save/Unsave job
+  toggleSaveJob() {
+    const currentJob = this.job();
+    if (!currentJob) return;
+
+    this.isSaving.set(true);
+    
+    if (currentJob.isSaved) {
+      this.savedJobService.unsaveJob(currentJob.id).subscribe({
+        next: () => {
+          this.job.update(j => j ? { ...j, isSaved: false } : j);
+          this.isSaving.set(false);
+        },
+        error: (err) => {
+          console.error('Failed to unsave job', err);
+          this.isSaving.set(false);
+        }
+      });
+    } else {
+      this.savedJobService.saveJob(currentJob.id).subscribe({
+        next: () => {
+          this.job.update(j => j ? { ...j, isSaved: true } : j);
+          this.isSaving.set(false);
+        },
+        error: (err) => {
+          console.error('Failed to save job', err);
+          this.isSaving.set(false);
+        }
+      });
+    }
+  }
+
+  // Apply for job
+  applyForJob() {
+    const currentJob = this.job();
+    if (!currentJob || currentJob.hasApplied) return;
+
+    this.isApplying.set(true);
+    
+    this.applicationService.applyForJob({ jobId: currentJob.id }).subscribe({
+      next: () => {
+        this.job.update(j => j ? { ...j, hasApplied: true } : j);
+        this.isApplying.set(false);
+        alert('Application submitted successfully!');
+      },
+      error: (err) => {
+        console.error('Failed to apply for job', err);
+        this.isApplying.set(false);
+        alert('Failed to submit application. Please try again.');
+      }
+    });
+  }
+
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 }
