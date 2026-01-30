@@ -101,7 +101,13 @@ export class LoginPageComponent {
           take(1) // Only take the first emission to prevent repeated redirects
         ).subscribe(user => {
           if (user) {
-            const target = user.role === 'employer' ? '/employer-dashbord' : '/find-jobs';
+            let target = '/find-jobs';
+            const role = user.role?.toUpperCase();
+            if (role === 'ADMIN') {
+              target = '/admin-dashboard';
+            } else if (role === 'EMPLOYER') {
+              target = '/employer-dashbord';
+            }
             this.isLoading.set(false);
             this.router.navigateByUrl(target);
           }

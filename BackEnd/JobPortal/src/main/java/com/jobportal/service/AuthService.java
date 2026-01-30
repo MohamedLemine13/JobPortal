@@ -112,15 +112,17 @@ public class AuthService {
     public AuthResponse login(LoginRequest request) {
         // Check if user exists first
         User user = userRepository.findByEmail(request.getEmail()).orElse(null);
-        
+
         if (user == null) {
             throw new UnauthorizedException("No account found with this email address");
         }
 
         // Check if account is locked
         if (user.getAccountLockedUntil() != null && LocalDateTime.now().isBefore(user.getAccountLockedUntil())) {
-            long minutesRemaining = java.time.Duration.between(LocalDateTime.now(), user.getAccountLockedUntil()).toMinutes() + 1;
-            throw new UnauthorizedException("Account is locked. Please try again in " + minutesRemaining + " minute(s)");
+            long minutesRemaining = java.time.Duration.between(LocalDateTime.now(), user.getAccountLockedUntil())
+                    .toMinutes() + 1;
+            throw new UnauthorizedException(
+                    "Account is locked. Please try again in " + minutesRemaining + " minute(s)");
         }
 
         // Reset lock if expired
@@ -137,15 +139,16 @@ public class AuthService {
             // Increment failed attempts
             int attempts = (user.getFailedLoginAttempts() == null ? 0 : user.getFailedLoginAttempts()) + 1;
             user.setFailedLoginAttempts(attempts);
-            
+
             int remainingAttempts = maxLoginAttempts - attempts;
-            
+
             if (attempts >= maxLoginAttempts) {
                 user.setAccountLockedUntil(LocalDateTime.now().plusMinutes(lockoutDurationMinutes));
                 userRepository.save(user);
-                throw new UnauthorizedException("Too many failed attempts. Account locked for " + lockoutDurationMinutes + " minutes");
+                throw new UnauthorizedException(
+                        "Too many failed attempts. Account locked for " + lockoutDurationMinutes + " minutes");
             }
-            
+
             userRepository.save(user);
             throw new UnauthorizedException("Incorrect password. " + remainingAttempts + " attempt(s) remaining");
         }
@@ -251,10 +254,13 @@ public class AuthService {
             return jobSeekerProfileRepository.findByUserId(user.getId())
                     .map(this::mapToJobSeekerProfileDto)
                     .orElse(null);
-        } else {
+        } else if (user.getRole() == UserRole.EMPLOYER) {
             return employerProfileRepository.findByUserId(user.getId())
                     .map(this::mapToEmployerProfileDto)
                     .orElse(null);
+        } else {
+            // Admin users don't have profiles
+            return null;
         }
     }
 

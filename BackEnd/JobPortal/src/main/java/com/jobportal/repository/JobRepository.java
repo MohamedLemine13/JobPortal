@@ -49,6 +49,9 @@ public interface JobRepository extends JpaRepository<Job, UUID>, JpaSpecificatio
 
     long countByEmployerIdAndStatus(UUID employerId, JobStatus status);
 
+    // Count jobs by status (for admin dashboard)
+    long countByStatus(JobStatus status);
+
     // Increment view count
     @Modifying
     @Query("UPDATE Job j SET j.viewsCount = j.viewsCount + 1 WHERE j.id = :jobId")

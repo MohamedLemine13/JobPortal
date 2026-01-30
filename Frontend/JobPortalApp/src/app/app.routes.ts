@@ -14,11 +14,19 @@ import { JobDetailsComponent } from './pages/JobSeeker/job-details/job-details.c
 import { UserProfileComponent } from './pages/JobSeeker/user-profile/user-profile.component';
 import { JobSeekerMessagesComponent } from './pages/JobSeeker/messages/messages.component';
 import { SavedJobsComponent } from './pages/JobSeeker/saved-jobs/saved-jobs.component';
+import { AdminDashboardComponent } from './pages/Admin/admin-dashboard/admin-dashboard.component';
+import { ManageUsersComponent } from './pages/Admin/manage-users/manage-users.component';
+import { ManageJobsComponent as AdminManageJobsComponent } from './pages/Admin/manage-jobs/manage-jobs.component';
+import { AdminSettingsComponent } from './pages/Admin/settings/settings.component';
 
 export const routes: Routes = [
     { path: '', component: LandingPageComponent },
     { path: 'login', component: LoginPageComponent },
     { path: 'signup', component: SignupPageComponent },
+    { path: 'admin-dashboard', component: AdminDashboardComponent, pathMatch: 'full' },
+    { path: 'admin-dashboard/users', component: ManageUsersComponent },
+    { path: 'admin-dashboard/jobs', component: AdminManageJobsComponent },
+    { path: 'admin-dashboard/settings', component: AdminSettingsComponent },
     { path: 'employer-dashbord/post-job', component: PostJobComponent },
     { path: 'employer-dashbord/manage-jobs', component: ManageJobsComponent },
     { path: 'employer-dashbord/company-profile', component: CompanyProfileComponent },

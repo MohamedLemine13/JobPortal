@@ -1,6 +1,7 @@
-import { Injectable } from '@angular/core';
+import { Injectable, PLATFORM_ID, inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap, switchMap, map, of, catchError, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, tap, map, of, catchError, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { LoginRequest, RegisterRequest, AuthResponse, User } from '../models/auth.models';
 
@@ -9,10 +10,18 @@ import { LoginRequest, RegisterRequest, AuthResponse, User } from '../models/aut
 })
 export class AuthService {
   private apiUrl = `${environment.apiUrl}`;
-  private currentUserSubject = new BehaviorSubject<User | null>(this.getUserFromStorage());
-  public currentUser$ = this.currentUserSubject.asObservable();
+  private platformId = inject(PLATFORM_ID);
+  private currentUserSubject: BehaviorSubject<User | null>;
+  public currentUser$: Observable<User | null>;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) {
+    this.currentUserSubject = new BehaviorSubject<User | null>(this.getUserFromStorage());
+    this.currentUser$ = this.currentUserSubject.asObservable();
+  }
+
+  private isBrowser(): boolean {
+    return isPlatformBrowser(this.platformId);
+  }
 
   register(request: RegisterRequest): Observable<AuthResponse> {
     return this.http.post<any>(`${this.apiUrl}/auth/register`, request).pipe(
@@ -40,6 +49,7 @@ export class AuthService {
   }
 
   private storeTokens(accessToken: string, refreshToken: string): void {
+    if (!this.isBrowser()) return;
     if (accessToken) {
       localStorage.setItem('access_token', accessToken);
     }
@@ -54,21 +64,26 @@ export class AuthService {
       catchError(() => of(null)) // Ignore errors on logout
     ).subscribe();
     
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user');
+    if (this.isBrowser()) {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
+    }
     this.currentUserSubject.next(null);
   }
 
   isAuthenticated(): boolean {
+    if (!this.isBrowser()) return false;
     return !!localStorage.getItem('access_token');
   }
 
   getToken(): string | null {
+    if (!this.isBrowser()) return null;
     return localStorage.getItem('access_token');
   }
 
   getRefreshToken(): string | null {
+    if (!this.isBrowser()) return null;
     return localStorage.getItem('refresh_token');
   }
 
@@ -81,7 +96,7 @@ export class AuthService {
     return this.http.post<any>(`${this.apiUrl}/auth/refresh`, { refreshToken }).pipe(
       tap((response: any) => {
         const newAccessToken = response.data?.accessToken || response.accessToken;
-        if (newAccessToken) {
+        if (newAccessToken && this.isBrowser()) {
           localStorage.setItem('access_token', newAccessToken);
         }
       }),
@@ -124,12 +139,16 @@ export class AuthService {
   }
 
   private setUser(user: User): void {
-    localStorage.setItem('user', JSON.stringify(user));
+    if (this.isBrowser()) {
+      localStorage.setItem('user', JSON.stringify(user));
+    }
     this.currentUserSubject.next(user);
   }
 
   private getUserFromStorage(): User | null {
+    if (!this.isBrowser()) return null;
     const userStr = localStorage.getItem('user');
     return userStr ? JSON.parse(userStr) : null;
   }
 }
+

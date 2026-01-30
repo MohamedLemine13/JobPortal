@@ -1,0 +1,318 @@
+<div class="flex min-h-screen bg-gray-50">
+    <!-- Mobile Menu Overlay -->
+    @if (isMobileMenuOpen()) {
+    <div class="fixed inset-0 bg-black/50 z-40 lg:hidden" (click)="closeMobileMenu()"></div>
+    }
+
+    <!-- Sidebar - Hidden on mobile, visible on lg screens -->
+    <aside class="w-64 bg-white border-r border-gray-200 flex-col fixed h-full z-50 hidden lg:flex">
+        <!-- Logo -->
+        <div class="p-6 border-b border-gray-100">
+            <div class="flex items-center gap-3">
+                <div
+                    class="w-10 h-10 bg-gradient-to-r from-red-600 to-orange-600 rounded-xl flex items-center justify-center shadow-md shadow-red-500/20">
+                    <lucide-icon [img]="Shield" class="w-5 h-5 text-white"></lucide-icon>
+                </div>
+                <span class="text-xl font-bold text-gray-900">Admin Panel</span>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 p-4">
+            <ul class="space-y-2">
+                @for (item of navItems; track item.label) {
+                <li>
+                    <a [routerLink]="item.route" routerLinkActive="bg-red-100 text-red-600 border-red-200"
+                        [routerLinkActiveOptions]="{ exact: true }"
+                        class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-100 transition-colors border border-transparent">
+                        <lucide-icon [img]="item.icon" class="w-5 h-5"></lucide-icon>
+                        <span class="font-medium">{{ item.label }}</span>
+                    </a>
+                </li>
+                }
+            </ul>
+        </nav>
+
+        <!-- Logout -->
+        <div class="p-4 border-t border-gray-100">
+            <button (click)="logout()"
+                class="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-white bg-red-500 hover:bg-red-600 transition-colors">
+                <lucide-icon [img]="LogOut" class="w-5 h-5"></lucide-icon>
+                <span class="font-medium">Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Mobile Sidebar -->
+    @if (isMobileMenuOpen()) {
+    <aside @slideIn class="w-64 bg-white border-r border-gray-200 flex flex-col fixed h-full z-50 lg:hidden">
+        <!-- Logo -->
+        <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div
+                    class="w-10 h-10 bg-gradient-to-r from-red-600 to-orange-600 rounded-xl flex items-center justify-center shadow-md shadow-red-500/20">
+                    <lucide-icon [img]="Shield" class="w-5 h-5 text-white"></lucide-icon>
+                </div>
+                <span class="text-xl font-bold text-gray-900">Admin Panel</span>
+            </div>
+            <button (click)="closeMobileMenu()" class="p-2 hover:bg-gray-100 rounded-lg">
+                <lucide-icon [img]="X" class="w-5 h-5 text-gray-500"></lucide-icon>
+            </button>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 p-4">
+            <ul class="space-y-2">
+                @for (item of navItems; track item.label) {
+                <li>
+                    <a [routerLink]="item.route" routerLinkActive="bg-red-100 text-red-600 border-red-200"
+                        [routerLinkActiveOptions]="{ exact: true }" (click)="closeMobileMenu()"
+                        class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-100 transition-colors border border-transparent">
+                        <lucide-icon [img]="item.icon" class="w-5 h-5"></lucide-icon>
+                        <span class="font-medium">{{ item.label }}</span>
+                    </a>
+                </li>
+                }
+            </ul>
+        </nav>
+
+        <!-- Logout -->
+        <div class="p-4 border-t border-gray-100">
+            <button (click)="logout()"
+                class="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-white bg-red-500 hover:bg-red-600 transition-colors">
+                <lucide-icon [img]="LogOut" class="w-5 h-5"></lucide-icon>
+                <span class="font-medium">Logout</span>
+            </button>
+        </div>
+    </aside>
+    }
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-64">
+        <!-- Top Header -->
+        <header
+            class="bg-white border-b border-gray-200 px-4 lg:px-8 py-4 flex items-center justify-between sticky top-0 z-10">
+            <div class="flex items-center gap-4">
+                <!-- Mobile Menu Button -->
+                <button (click)="toggleMobileMenu()" class="p-2 hover:bg-gray-100 rounded-lg lg:hidden">
+                    <lucide-icon [img]="Menu" class="w-6 h-6 text-gray-600"></lucide-icon>
+                </button>
+                <div>
+                    <h1 class="text-xl lg:text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+                    <p class="text-gray-500 text-sm hidden sm:block">Manage your platform from here.</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <!-- Profile with Dropdown -->
+                <div class="relative">
+                    <!-- Backdrop for closing dropdown -->
+                    @if (isProfileDropdownOpen()) {
+                    <div class="fixed inset-0 z-40" (click)="closeProfileDropdown()"></div>
+                    }
+
+                    <div (click)="toggleProfileDropdown()"
+                        class="flex items-center gap-3 px-2 py-1 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors">
+                        <div
+                            class="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center overflow-hidden">
+                            @if (user().avatar) {
+                            <img [src]="user().avatar" alt="Profile" class="w-full h-full object-cover" />
+                            } @else {
+                            <span class="text-white font-medium text-sm">{{ user().name.charAt(0) }}</span>
+                            }
+                        </div>
+                        <div class="hidden sm:block">
+                            <p class="font-medium text-gray-900 text-sm">{{ user().name }}</p>
+                            <p class="text-gray-500 text-xs">{{ user().role }}</p>
+                        </div>
+                        <lucide-icon [img]="ChevronDown"
+                            class="w-4 h-4 text-gray-400 hidden sm:block transition-transform duration-200"
+                            [class.rotate-180]="isProfileDropdownOpen()"></lucide-icon>
+                    </div>
+
+                    <!-- Dropdown Menu -->
+                    @if (isProfileDropdownOpen()) {
+                    <div
+                        class="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
+                        <!-- User Info -->
+                        <div class="px-4 py-3 border-b border-gray-100">
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center overflow-hidden">
+                                    @if (user().avatar) {
+                                    <img [src]="user().avatar" alt="Profile" class="w-full h-full object-cover" />
+                                    } @else {
+                                    <span class="text-white font-medium">{{ user().name.charAt(0) }}</span>
+                                    }
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-900 text-sm">{{ user().name }}</p>
+                                    <p class="text-gray-500 text-xs">{{ user().email }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Menu Items -->
+                        <div class="py-1">
+                            <a routerLink="/admin-dashboard" (click)="closeProfileDropdown()"
+                                class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                <lucide-icon [img]="LayoutDashboard" class="w-4 h-4 text-gray-400"></lucide-icon>
+                                Dashboard
+                            </a>
+                            <a routerLink="/admin-dashboard/users" (click)="closeProfileDropdown()"
+                                class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                <lucide-icon [img]="Users" class="w-4 h-4 text-gray-400"></lucide-icon>
+                                Manage Users
+                            </a>
+                            <a routerLink="/admin-dashboard/jobs" (click)="closeProfileDropdown()"
+                                class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                <lucide-icon [img]="Briefcase" class="w-4 h-4 text-gray-400"></lucide-icon>
+                                Manage Jobs
+                            </a>
+                        </div>
+
+                        <!-- Logout -->
+                        <div class="border-t border-gray-100 pt-1">
+                            <button (click)="logout(); closeProfileDropdown()"
+                                class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                <lucide-icon [img]="LogOut" class="w-4 h-4"></lucide-icon>
+                                Sign Out
+                            </button>
+                        </div>
+                    </div>
+                    }
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <div class="p-8">
+            <!-- Stats Cards -->
+            <div @fadeInUp class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                @for (stat of stats(); track stat.label; let i = $index) {
+                <div [@staggerFadeIn]="{ value: '', params: { delay: i * 100 } }"
+                    class="rounded-2xl p-6 text-white {{ stat.bgColor }} shadow-lg">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <p class="text-white/80 text-sm mb-1">{{ stat.label }}</p>
+                            <p class="text-4xl font-bold mb-2">{{ stat.value }}</p>
+                            <div class="flex items-center gap-1 text-white/90 text-sm">
+                                <lucide-icon [img]="TrendingUp" class="w-4 h-4"></lucide-icon>
+                                <span>{{ stat.growth }}</span>
+                            </div>
+                        </div>
+                        <div class="w-12 h-12 {{ stat.iconBg }} rounded-xl flex items-center justify-center">
+                            <lucide-icon [img]="stat.icon" class="w-6 h-6 text-white"></lucide-icon>
+                        </div>
+                    </div>
+                </div>
+                }
+            </div>
+
+            <!-- Recent Users & Jobs -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <!-- Recent Users -->
+                <div [@staggerFadeIn]="{ value: '', params: { delay: 300 } }"
+                    class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 class="text-lg font-bold text-gray-900">Recent Users</h2>
+                            <p class="text-gray-500 text-sm">Latest registered users</p>
+                        </div>
+                        <a routerLink="/admin-dashboard/users"
+                            class="text-red-600 hover:text-red-700 text-sm font-medium">
+                            View all
+                        </a>
+                    </div>
+                    <div class="space-y-4">
+                        @if (recentUsers().length === 0) {
+                        <div class="flex flex-col items-center justify-center py-8 text-gray-400">
+                            <lucide-icon [img]="Users" class="w-12 h-12 mb-3 opacity-50"></lucide-icon>
+                            <p class="text-sm">No users yet</p>
+                        </div>
+                        } @else {
+                        @for (user of recentUsers(); track user.id) {
+                        <div
+                            class="flex items-center justify-between p-4 rounded-xl hover:bg-gray-50 transition-colors">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                                    <span class="text-white font-semibold text-sm">{{ user.initials }}</span>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-900">{{ user.name }}</p>
+                                    <p class="text-gray-500 text-sm">{{ user.email }}</p>
+                                </div>
+                            </div>
+                            <span class="px-3 py-1 text-xs font-medium rounded-full {{ getRoleBadgeClass(user.role) }}">
+                                {{ user.role }}
+                            </span>
+                        </div>
+                        }
+                        }
+                    </div>
+                </div>
+
+                <!-- Recent Jobs -->
+                <div [@staggerFadeIn]="{ value: '', params: { delay: 400 } }"
+                    class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 class="text-lg font-bold text-gray-900">Recent Jobs</h2>
+                            <p class="text-gray-500 text-sm">Latest posted jobs</p>
+                        </div>
+                        <a routerLink="/admin-dashboard/jobs"
+                            class="text-red-600 hover:text-red-700 text-sm font-medium">
+                            View all
+                        </a>
+                    </div>
+                    <div class="space-y-4">
+                        @if (recentJobs().length === 0) {
+                        <div class="flex flex-col items-center justify-center py-8 text-gray-400">
+                            <lucide-icon [img]="Briefcase" class="w-12 h-12 mb-3 opacity-50"></lucide-icon>
+                            <p class="text-sm">No jobs yet</p>
+                        </div>
+                        } @else {
+                        @for (job of recentJobs(); track job.id) {
+                        <div
+                            class="flex items-center justify-between p-4 rounded-xl hover:bg-gray-50 transition-colors">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                                    <lucide-icon [img]="Briefcase" class="w-5 h-5 text-green-600"></lucide-icon>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-900">{{ job.title }}</p>
+                                    <p class="text-gray-500 text-sm">{{ job.company }} · {{ job.location }}</p>
+                                </div>
+                            </div>
+                            <span class="px-3 py-1 text-xs font-medium rounded-full {{ getStatusBadgeClass(job.status) }}">
+                                {{ job.status }}
+                            </span>
+                        </div>
+                        }
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div [@staggerFadeIn]="{ value: '', params: { delay: 500 } }"
+                class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <div class="mb-6">
+                    <h2 class="text-lg font-bold text-gray-900">Quick Actions</h2>
+                    <p class="text-gray-500 text-sm">Common administrative tasks</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    @for (action of quickActions; track action.label) {
+                    <a [routerLink]="action.route"
+                        class="flex items-center gap-4 p-4 rounded-xl border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all group">
+                        <div
+                            class="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center group-hover:bg-gray-200 transition-colors">
+                            <lucide-icon [img]="action.icon" class="w-5 h-5 text-red-600"></lucide-icon>
+                        </div>
+                        <span class="font-medium text-gray-800">{{ action.label }}</span>
+                    </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </main>
+</div>

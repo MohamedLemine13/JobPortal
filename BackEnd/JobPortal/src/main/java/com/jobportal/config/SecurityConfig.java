@@ -72,6 +72,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/profile/me/cv").hasRole("JOB_SEEKER")
                         .requestMatchers(HttpMethod.DELETE, "/api/profile/me/cv").hasRole("JOB_SEEKER")
 
+                        // Admin-only endpoints
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
                         // All other endpoints require authentication
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

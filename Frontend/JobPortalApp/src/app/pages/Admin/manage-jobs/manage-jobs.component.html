@@ -1,0 +1,220 @@
+<div class="flex min-h-screen bg-gray-50">
+    <!-- Mobile Menu Overlay -->
+    @if (isMobileMenuOpen()) {
+    <div class="fixed inset-0 bg-black/50 z-40 lg:hidden" (click)="closeMobileMenu()"></div>
+    }
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white border-r border-gray-200 flex-col fixed h-full z-50 hidden lg:flex">
+        <div class="p-6 border-b border-gray-100">
+            <div class="flex items-center gap-3">
+                <div
+                    class="w-10 h-10 bg-gradient-to-r from-red-600 to-orange-600 rounded-xl flex items-center justify-center shadow-md shadow-red-500/20">
+                    <lucide-icon [img]="Shield" class="w-5 h-5 text-white"></lucide-icon>
+                </div>
+                <span class="text-xl font-bold text-gray-900">Admin Panel</span>
+            </div>
+        </div>
+
+        <nav class="flex-1 p-4">
+            <ul class="space-y-2">
+                @for (item of navItems; track item.label) {
+                <li>
+                    <a [routerLink]="item.route" routerLinkActive="bg-red-100 text-red-600 border-red-200"
+                        [routerLinkActiveOptions]="{ exact: true }"
+                        class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-100 transition-colors border border-transparent">
+                        <lucide-icon [img]="item.icon" class="w-5 h-5"></lucide-icon>
+                        <span class="font-medium">{{ item.label }}</span>
+                    </a>
+                </li>
+                }
+            </ul>
+        </nav>
+
+        <div class="p-4 border-t border-gray-100">
+            <button (click)="logout()"
+                class="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-white bg-red-500 hover:bg-red-600 transition-colors">
+                <lucide-icon [img]="LogOut" class="w-5 h-5"></lucide-icon>
+                <span class="font-medium">Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Mobile Sidebar -->
+    @if (isMobileMenuOpen()) {
+    <aside @slideIn class="w-64 bg-white border-r border-gray-200 flex flex-col fixed h-full z-50 lg:hidden">
+        <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div
+                    class="w-10 h-10 bg-gradient-to-r from-red-600 to-orange-600 rounded-xl flex items-center justify-center">
+                    <lucide-icon [img]="Shield" class="w-5 h-5 text-white"></lucide-icon>
+                </div>
+                <span class="text-xl font-bold text-gray-900">Admin Panel</span>
+            </div>
+            <button (click)="closeMobileMenu()" class="p-2 hover:bg-gray-100 rounded-lg">
+                <lucide-icon [img]="X" class="w-5 h-5 text-gray-500"></lucide-icon>
+            </button>
+        </div>
+        <nav class="flex-1 p-4">
+            <ul class="space-y-2">
+                @for (item of navItems; track item.label) {
+                <li>
+                    <a [routerLink]="item.route" (click)="closeMobileMenu()"
+                        class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-100 transition-colors">
+                        <lucide-icon [img]="item.icon" class="w-5 h-5"></lucide-icon>
+                        <span class="font-medium">{{ item.label }}</span>
+                    </a>
+                </li>
+                }
+            </ul>
+        </nav>
+        <div class="p-4 border-t border-gray-100">
+            <button (click)="logout()"
+                class="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-white bg-red-500 hover:bg-red-600 transition-colors">
+                <lucide-icon [img]="LogOut" class="w-5 h-5"></lucide-icon>
+                <span class="font-medium">Logout</span>
+            </button>
+        </div>
+    </aside>
+    }
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-64">
+        <header
+            class="bg-white border-b border-gray-200 px-4 lg:px-8 py-4 flex items-center justify-between sticky top-0 z-10">
+            <div class="flex items-center gap-4">
+                <button (click)="toggleMobileMenu()" class="p-2 hover:bg-gray-100 rounded-lg lg:hidden">
+                    <lucide-icon [img]="Menu" class="w-6 h-6 text-gray-600"></lucide-icon>
+                </button>
+                <div>
+                    <h1 class="text-xl lg:text-2xl font-bold text-gray-900">Manage Jobs</h1>
+                    <p class="text-gray-500 text-sm hidden sm:block">View and manage all platform jobs</p>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-8">
+            <!-- Filters -->
+            <div @fadeInUp class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
+                <div class="flex flex-wrap gap-4 items-center">
+                    <span class="text-gray-700 font-medium">Filter by status:</span>
+                    <button (click)="filterByStatus('')"
+                        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                        [class]="statusFilter() === '' ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'">
+                        All
+                    </button>
+                    <button (click)="filterByStatus('active')"
+                        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                        [class]="statusFilter() === 'active' ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'">
+                        Active
+                    </button>
+                    <button (click)="filterByStatus('closed')"
+                        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                        [class]="statusFilter() === 'closed' ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'">
+                        Closed
+                    </button>
+                    <button (click)="filterByStatus('draft')"
+                        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                        [class]="statusFilter() === 'draft' ? 'bg-yellow-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'">
+                        Draft
+                    </button>
+                </div>
+            </div>
+
+            <!-- Jobs Table -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b border-gray-100">
+                            <tr>
+                                <th class="text-left px-6 py-4 text-sm font-semibold text-gray-600">Job Title</th>
+                                <th class="text-left px-6 py-4 text-sm font-semibold text-gray-600">Company</th>
+                                <th class="text-left px-6 py-4 text-sm font-semibold text-gray-600">Location</th>
+                                <th class="text-left px-6 py-4 text-sm font-semibold text-gray-600">Status</th>
+                                <th class="text-left px-6 py-4 text-sm font-semibold text-gray-600">Posted</th>
+                                <th class="text-left px-6 py-4 text-sm font-semibold text-gray-600">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (isLoading()) {
+                            <tr>
+                                <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <div
+                                            class="w-5 h-5 border-2 border-red-500 border-t-transparent rounded-full animate-spin">
+                                        </div>
+                                        Loading jobs...
+                                    </div>
+                                </td>
+                            </tr>
+                            } @else if (jobs().length === 0) {
+                            <tr>
+                                <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                                    <lucide-icon [img]="Briefcase"
+                                        class="w-12 h-12 mx-auto mb-3 opacity-50"></lucide-icon>
+                                    <p>No jobs found</p>
+                                </td>
+                            </tr>
+                            } @else {
+                            @for (job of jobs(); track job.id) {
+                            <tr class="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                                            <lucide-icon [img]="Briefcase" class="w-5 h-5 text-green-600"></lucide-icon>
+                                        </div>
+                                        <span class="font-medium text-gray-900">{{ job.title }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-2 text-gray-600">
+                                        <lucide-icon [img]="Building2" class="w-4 h-4"></lucide-icon>
+                                        {{ job.company }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-2 text-gray-600">
+                                        <lucide-icon [img]="MapPin" class="w-4 h-4"></lucide-icon>
+                                        {{ job.location }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span
+                                        class="px-3 py-1 text-xs font-medium rounded-full {{ getStatusBadgeClass(job.status) }}">
+                                        {{ job.status }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-gray-600 text-sm">{{ job.createdAt }}</td>
+                                <td class="px-6 py-4">
+                                    <button (click)="deleteJob(job.id)"
+                                        class="p-2 hover:bg-red-50 rounded-lg transition-colors" title="Delete job">
+                                        <lucide-icon [img]="Trash2" class="w-4 h-4 text-red-500"></lucide-icon>
+                                    </button>
+                                </td>
+                            </tr>
+                            }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+                    <p class="text-sm text-gray-600">
+                        Showing page {{ currentPage() + 1 }} of {{ totalPages() }} ({{ totalElements() }} total jobs)
+                    </p>
+                    <div class="flex items-center gap-2">
+                        <button (click)="prevPage()" [disabled]="currentPage() === 0"
+                            class="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                            <lucide-icon [img]="ChevronLeft" class="w-4 h-4 text-gray-600"></lucide-icon>
+                        </button>
+                        <button (click)="nextPage()" [disabled]="currentPage() >= totalPages() - 1"
+                            class="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                            <lucide-icon [img]="ChevronRight" class="w-4 h-4 text-gray-600"></lucide-icon>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
