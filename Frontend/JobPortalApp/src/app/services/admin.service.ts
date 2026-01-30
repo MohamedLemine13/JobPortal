@@ -32,6 +32,34 @@ export interface JobListItem {
   applicationsCount: number;
 }
 
+export interface JobDetail {
+  id: string;
+  title: string;
+  companyName: string;
+  description: string;
+  requirements: string;
+  location: string;
+  salaryMin: number;
+  salaryMax: number;
+  jobType: string;
+  experienceLevel: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  applicationCount: number;
+  employerId: string;
+}
+
+export interface ApplicationItem {
+  id: string;
+  applicantName: string;
+  applicantEmail: string;
+  coverLetter: string;
+  resumeUrl: string;
+  status: string;
+  appliedAt: string;
+}
+
 export interface PagedResponse<T> {
   content: T[];
   totalElements: number;
@@ -95,6 +123,14 @@ export class AdminService {
     return this.http.get<any>(`${this.apiUrl}/jobs`, { params });
   }
 
+  getJobById(id: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/jobs/${id}`);
+  }
+
+  getJobApplications(id: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/jobs/${id}/applications`);
+  }
+
   deleteJob(id: string): Observable<any> {
     return this.http.delete<any>(`${this.apiUrl}/jobs/${id}`);
   }
@@ -116,4 +152,5 @@ export class AdminService {
     return this.http.post<any>(`${this.apiUrl}/settings/initialize`, {});
   }
 }
+
 

@@ -17,10 +17,14 @@ import {
   MapPin,
   Building2,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Eye,
+  DollarSign,
+  Clock,
+  User
 } from 'lucide-angular';
 import { AuthService } from '../../../services/auth.service';
-import { AdminService } from '../../../services/admin.service';
+import { AdminService, JobDetail, ApplicationItem } from '../../../services/admin.service';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -42,6 +46,15 @@ import { FormsModule } from '@angular/forms';
       ]),
       transition(':leave', [
         animate('0.3s ease-in', style({ transform: 'translateX(-100%)' }))
+      ])
+    ]),
+    trigger('modalFade', [
+      transition(':enter', [
+        style({ opacity: 0 }),
+        animate('0.2s ease-out', style({ opacity: 1 }))
+      ]),
+      transition(':leave', [
+        animate('0.2s ease-in', style({ opacity: 0 }))
       ])
     ])
   ]
@@ -78,6 +91,10 @@ export class ManageJobsComponent implements OnInit {
   readonly Building2 = Building2;
   readonly ChevronLeft = ChevronLeft;
   readonly ChevronRight = ChevronRight;
+  readonly Eye = Eye;
+  readonly DollarSign = DollarSign;
+  readonly Clock = Clock;
+  readonly User = User;
 
   // Mobile menu state
   isMobileMenuOpen = signal(false);
@@ -109,6 +126,17 @@ export class ManageJobsComponent implements OnInit {
   totalElements = signal(0);
   pageSize = 10;
 
+  // Job Details Modal
+  showJobDetailModal = signal(false);
+  selectedJob = signal<JobDetail | null>(null);
+  isLoadingJobDetail = signal(false);
+
+  // Applications Modal
+  showApplicationsModal = signal(false);
+  selectedJobApplications = signal<ApplicationItem[]>([]);
+  isLoadingApplications = signal(false);
+  selectedJobTitle = signal('');
+
   fetchJobs() {
     this.isLoading.set(true);
     const status = this.statusFilter() || undefined;
@@ -127,7 +155,7 @@ export class ManageJobsComponent implements OnInit {
           status: j.status || 'active',
           salary: j.salary || 'Not specified',
           createdAt: j.createdAt ? new Date(j.createdAt).toLocaleDateString() : 'N/A',
-          applicationsCount: j.applicationsCount || 0
+          applicationsCount: j.applicationCount || j.applicationsCount || 0
         })));
         
         this.totalPages.set(data.totalPages || 1);
@@ -161,6 +189,54 @@ export class ManageJobsComponent implements OnInit {
     }
   }
 
+  viewJobDetails(jobId: string) {
+    this.isLoadingJobDetail.set(true);
+    this.showJobDetailModal.set(true);
+    
+    this.adminService.getJobById(jobId).subscribe({
+      next: (response: any) => {
+        const job = response.data || response;
+        this.selectedJob.set(job);
+        this.isLoadingJobDetail.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to fetch job details', err);
+        this.isLoadingJobDetail.set(false);
+        this.showJobDetailModal.set(false);
+      }
+    });
+  }
+
+  closeJobDetailModal() {
+    this.showJobDetailModal.set(false);
+    this.selectedJob.set(null);
+  }
+
+  viewApplications(jobId: string, jobTitle: string) {
+    this.isLoadingApplications.set(true);
+    this.selectedJobTitle.set(jobTitle);
+    this.showApplicationsModal.set(true);
+    
+    this.adminService.getJobApplications(jobId).subscribe({
+      next: (response: any) => {
+        const applications = response.data || response || [];
+        this.selectedJobApplications.set(applications);
+        this.isLoadingApplications.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to fetch applications', err);
+        this.isLoadingApplications.set(false);
+        this.showApplicationsModal.set(false);
+      }
+    });
+  }
+
+  closeApplicationsModal() {
+    this.showApplicationsModal.set(false);
+    this.selectedJobApplications.set([]);
+    this.selectedJobTitle.set('');
+  }
+
   deleteJob(jobId: string) {
     if (confirm('Are you sure you want to delete this job?')) {
       this.adminService.deleteJob(jobId).subscribe({
@@ -185,8 +261,33 @@ export class ManageJobsComponent implements OnInit {
     }
   }
 
+  getApplicationStatusClass(status: string): string {
+    switch (status?.toLowerCase()) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-700';
+      case 'reviewed':
+        return 'bg-blue-100 text-blue-700';
+      case 'shortlisted':
+        return 'bg-purple-100 text-purple-700';
+      case 'accepted':
+        return 'bg-green-100 text-green-700';
+      case 'rejected':
+        return 'bg-red-100 text-red-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
+    }
+  }
+
+  formatSalary(min: number, max: number): string {
+    if (!min && !max) return 'Not specified';
+    if (min && max) return `$${min.toLocaleString()} - $${max.toLocaleString()}`;
+    if (min) return `$${min.toLocaleString()}+`;
+    return `Up to $${max.toLocaleString()}`;
+  }
+
   logout() {
     this.authService.logout();
     this.router.navigate(['/login']);
   }
 }
+

@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -22,6 +23,8 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID> 
 
     // Find applications by job
     Page<Application> findByJobId(UUID jobId, Pageable pageable);
+
+    List<Application> findByJobId(UUID jobId);
 
     Page<Application> findByJobIdAndStatus(UUID jobId, ApplicationStatus status, Pageable pageable);
 

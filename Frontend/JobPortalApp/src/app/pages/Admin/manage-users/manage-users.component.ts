@@ -81,6 +81,7 @@ export class ManageUsersComponent implements OnInit {
   readonly ChevronLeft = ChevronLeft;
   readonly ChevronRight = ChevronRight;
 
+
   // Mobile menu state
   isMobileMenuOpen = signal(false);
 
@@ -127,7 +128,7 @@ export class ManageUsersComponent implements OnInit {
           email: u.email,
           name: u.fullName || u.companyName || u.email,
           role: u.role,
-          verified: u.verified,
+          verified: u.verified ?? u.isVerified,
           createdAt: u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A',
           initials: (u.fullName || u.companyName || u.email).charAt(0).toUpperCase()
         })));
@@ -183,6 +184,8 @@ export class ManageUsersComponent implements OnInit {
     });
   }
 
+
+
   getRoleBadgeClass(role: string): string {
     switch (role?.toUpperCase()) {
       case 'ADMIN':
@@ -201,3 +204,4 @@ export class ManageUsersComponent implements OnInit {
     this.router.navigate(['/login']);
   }
 }
+

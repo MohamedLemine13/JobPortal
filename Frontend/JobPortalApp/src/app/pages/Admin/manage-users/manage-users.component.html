@@ -8,7 +8,8 @@
     <aside class="w-64 bg-white border-r border-gray-200 flex-col fixed h-full z-50 hidden lg:flex">
         <div class="p-6 border-b border-gray-100">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-gradient-to-r from-red-600 to-orange-600 rounded-xl flex items-center justify-center shadow-md shadow-red-500/20">
+                <div
+                    class="w-10 h-10 bg-gradient-to-r from-red-600 to-orange-600 rounded-xl flex items-center justify-center shadow-md shadow-red-500/20">
                     <lucide-icon [img]="Shield" class="w-5 h-5 text-white"></lucide-icon>
                 </div>
                 <span class="text-xl font-bold text-gray-900">Admin Panel</span>
@@ -44,7 +45,8 @@
     <aside @slideIn class="w-64 bg-white border-r border-gray-200 flex flex-col fixed h-full z-50 lg:hidden">
         <div class="p-6 border-b border-gray-100 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-gradient-to-r from-red-600 to-orange-600 rounded-xl flex items-center justify-center">
+                <div
+                    class="w-10 h-10 bg-gradient-to-r from-red-600 to-orange-600 rounded-xl flex items-center justify-center">
                     <lucide-icon [img]="Shield" class="w-5 h-5 text-white"></lucide-icon>
                 </div>
                 <span class="text-xl font-bold text-gray-900">Admin Panel</span>
@@ -78,7 +80,8 @@
 
     <!-- Main Content -->
     <main class="flex-1 lg:ml-64">
-        <header class="bg-white border-b border-gray-200 px-4 lg:px-8 py-4 flex items-center justify-between sticky top-0 z-10">
+        <header
+            class="bg-white border-b border-gray-200 px-4 lg:px-8 py-4 flex items-center justify-between sticky top-0 z-10">
             <div class="flex items-center gap-4">
                 <button (click)="toggleMobileMenu()" class="p-2 hover:bg-gray-100 rounded-lg lg:hidden">
                     <lucide-icon [img]="Menu" class="w-6 h-6 text-gray-600"></lucide-icon>
@@ -95,22 +98,22 @@
             <div @fadeInUp class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
                 <div class="flex flex-wrap gap-4 items-center">
                     <span class="text-gray-700 font-medium">Filter by role:</span>
-                    <button (click)="filterByRole('')" 
+                    <button (click)="filterByRole('')"
                         class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                         [class]="roleFilter() === '' ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'">
                         All
                     </button>
-                    <button (click)="filterByRole('JOB_SEEKER')" 
+                    <button (click)="filterByRole('JOB_SEEKER')"
                         class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                         [class]="roleFilter() === 'JOB_SEEKER' ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'">
                         Job Seekers
                     </button>
-                    <button (click)="filterByRole('EMPLOYER')" 
+                    <button (click)="filterByRole('EMPLOYER')"
                         class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                         [class]="roleFilter() === 'EMPLOYER' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'">
                         Employers
                     </button>
-                    <button (click)="filterByRole('ADMIN')" 
+                    <button (click)="filterByRole('ADMIN')"
                         class="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                         [class]="roleFilter() === 'ADMIN' ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'">
                         Admins
@@ -137,7 +140,9 @@
                             <tr>
                                 <td colspan="6" class="px-6 py-12 text-center text-gray-500">
                                     <div class="flex items-center justify-center gap-2">
-                                        <div class="w-5 h-5 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                                        <div
+                                            class="w-5 h-5 border-2 border-red-500 border-t-transparent rounded-full animate-spin">
+                                        </div>
                                         Loading users...
                                     </div>
                                 </td>
@@ -154,7 +159,8 @@
                             <tr class="border-b border-gray-50 hover:bg-gray-50 transition-colors">
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                                        <div
+                                            class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                                             <span class="text-white font-semibold text-sm">{{ user.initials }}</span>
                                         </div>
                                         <span class="font-medium text-gray-900">{{ user.name }}</span>
@@ -162,7 +168,8 @@
                                 </td>
                                 <td class="px-6 py-4 text-gray-600">{{ user.email }}</td>
                                 <td class="px-6 py-4">
-                                    <span class="px-3 py-1 text-xs font-medium rounded-full {{ getRoleBadgeClass(user.role) }}">
+                                    <span
+                                        class="px-3 py-1 text-xs font-medium rounded-full {{ getRoleBadgeClass(user.role) }}">
                                         {{ user.role }}
                                     </span>
                                 </td>
@@ -182,14 +189,16 @@
                                 <td class="px-6 py-4 text-gray-600 text-sm">{{ user.createdAt }}</td>
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-2">
-                                        <button (click)="toggleVerification(user.id)" 
-                                            class="p-2 hover:bg-gray-100 rounded-lg transition-colors" 
+
+                                        <button (click)="toggleVerification(user.id)"
+                                            class="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                                             [title]="user.verified ? 'Unverify user' : 'Verify user'">
-                                            <lucide-icon [img]="user.verified ? XCircle : CheckCircle" 
-                                                class="w-4 h-4" [class]="user.verified ? 'text-yellow-500' : 'text-green-500'"></lucide-icon>
+                                            <lucide-icon [img]="user.verified ? XCircle : CheckCircle" class="w-4 h-4"
+                                                [class]="user.verified ? 'text-yellow-500' : 'text-green-500'"></lucide-icon>
                                         </button>
-                                        <button (click)="deleteUser(user.id)" 
-                                            class="p-2 hover:bg-red-50 rounded-lg transition-colors" title="Delete user">
+                                        <button (click)="deleteUser(user.id)"
+                                            class="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                                            title="Delete user">
                                             <lucide-icon [img]="Trash2" class="w-4 h-4 text-red-500"></lucide-icon>
                                         </button>
                                     </div>

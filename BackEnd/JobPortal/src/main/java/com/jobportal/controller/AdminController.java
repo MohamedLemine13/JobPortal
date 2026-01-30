@@ -11,6 +11,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -94,6 +95,24 @@ public class AdminController {
 
         Page<JobListDto> jobs = adminService.getAllJobs(pageable, status);
         return ResponseEntity.ok(ApiResponse.success(jobs, "Jobs retrieved successfully"));
+    }
+
+    /**
+     * Get job details by ID
+     */
+    @GetMapping("/jobs/{id}")
+    public ResponseEntity<ApiResponse<JobDetailDto>> getJobById(@PathVariable UUID id) {
+        JobDetailDto job = adminService.getJobById(id);
+        return ResponseEntity.ok(ApiResponse.success(job, "Job retrieved successfully"));
+    }
+
+    /**
+     * Get applications for a job
+     */
+    @GetMapping("/jobs/{id}/applications")
+    public ResponseEntity<ApiResponse<List<ApplicationDto>>> getJobApplications(@PathVariable UUID id) {
+        List<ApplicationDto> applications = adminService.getJobApplications(id);
+        return ResponseEntity.ok(ApiResponse.success(applications, "Applications retrieved successfully"));
     }
 
     /**

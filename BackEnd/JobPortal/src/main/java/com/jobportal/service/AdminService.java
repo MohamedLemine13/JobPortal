@@ -8,11 +8,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -24,6 +26,7 @@ public class AdminService {
     private final ApplicationRepository applicationRepository;
     private final JobSeekerProfileRepository jobSeekerProfileRepository;
     private final EmployerProfileRepository employerProfileRepository;
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * Get dashboard statistics
@@ -100,6 +103,11 @@ public class AdminService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId.toString()));
 
+        // Prevent unverifying admin accounts
+        if (user.getRole() == UserRole.ADMIN && user.getIsVerified()) {
+            throw new IllegalArgumentException("Cannot unverify admin accounts");
+        }
+
         user.setIsVerified(!user.getIsVerified());
         userRepository.save(user);
 
@@ -124,6 +132,28 @@ public class AdminService {
         }
 
         return jobs.map(this::mapToJobListDto);
+    }
+
+    /**
+     * Get job details by ID (admin view)
+     */
+    public JobDetailDto getJobById(UUID jobId) {
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new ResourceNotFoundException("Job", "id", jobId.toString()));
+
+        return mapToJobDetailDto(job);
+    }
+
+    /**
+     * Get applications for a job (admin view)
+     */
+    public List<ApplicationDto> getJobApplications(UUID jobId) {
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new ResourceNotFoundException("Job", "id", jobId.toString()));
+
+        return applicationRepository.findByJobId(jobId).stream()
+                .map(this::mapToApplicationDto)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -209,6 +239,46 @@ public class AdminService {
                 .status(job.getStatus().name())
                 .createdAt(job.getCreatedAt())
                 .applicationCount(job.getApplications() != null ? job.getApplications().size() : 0)
+                .build();
+    }
+
+    private JobDetailDto mapToJobDetailDto(Job job) {
+        String companyName = employerProfileRepository.findByUserId(job.getEmployer().getId())
+                .map(EmployerProfile::getCompanyName)
+                .orElse("Unknown Company");
+
+        return JobDetailDto.builder()
+                .id(job.getId().toString())
+                .title(job.getTitle())
+                .companyName(companyName)
+                .description(job.getDescription())
+                .requirements(job.getRequirements() != null ? String.join("\n", job.getRequirements()) : "")
+                .location(job.getLocation())
+                .salaryMin(job.getSalaryMin())
+                .salaryMax(job.getSalaryMax())
+                .jobType(job.getType() != null ? job.getType().name() : null)
+                .experienceLevel(job.getExperienceLevel() != null ? job.getExperienceLevel().name() : null)
+                .status(job.getStatus().name())
+                .createdAt(job.getCreatedAt())
+                .updatedAt(job.getUpdatedAt())
+                .applicationCount(job.getApplications() != null ? job.getApplications().size() : 0)
+                .employerId(job.getEmployer().getId().toString())
+                .build();
+    }
+
+    private ApplicationDto mapToApplicationDto(Application application) {
+        String applicantName = jobSeekerProfileRepository.findByUserId(application.getApplicant().getId())
+                .map(JobSeekerProfile::getFullName)
+                .orElse("Unknown");
+
+        return ApplicationDto.builder()
+                .id(application.getId().toString())
+                .applicantName(applicantName)
+                .applicantEmail(application.getApplicant().getEmail())
+                .coverLetter(application.getCoverLetter())
+                .resumeUrl(application.getCvUrl())
+                .status(application.getStatus().name())
+                .appliedAt(application.getAppliedAt())
                 .build();
     }
 }

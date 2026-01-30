@@ -186,10 +186,28 @@
                                 </td>
                                 <td class="px-6 py-4 text-gray-600 text-sm">{{ job.createdAt }}</td>
                                 <td class="px-6 py-4">
-                                    <button (click)="deleteJob(job.id)"
-                                        class="p-2 hover:bg-red-50 rounded-lg transition-colors" title="Delete job">
-                                        <lucide-icon [img]="Trash2" class="w-4 h-4 text-red-500"></lucide-icon>
-                                    </button>
+                                    <div class="flex items-center gap-2">
+                                        <button (click)="viewJobDetails(job.id)"
+                                            class="p-2 hover:bg-blue-50 rounded-lg transition-colors"
+                                            title="View details">
+                                            <lucide-icon [img]="Eye" class="w-4 h-4 text-blue-500"></lucide-icon>
+                                        </button>
+                                        <button (click)="viewApplications(job.id, job.title)"
+                                            class="p-2 hover:bg-purple-50 rounded-lg transition-colors relative"
+                                            title="View applications">
+                                            <lucide-icon [img]="Users" class="w-4 h-4 text-purple-500"></lucide-icon>
+                                            @if (job.applicationsCount > 0) {
+                                            <span
+                                                class="absolute -top-1 -right-1 w-4 h-4 bg-purple-500 text-white text-xs rounded-full flex items-center justify-center">
+                                                {{ job.applicationsCount }}
+                                            </span>
+                                            }
+                                        </button>
+                                        <button (click)="deleteJob(job.id)"
+                                            class="p-2 hover:bg-red-50 rounded-lg transition-colors" title="Delete job">
+                                            <lucide-icon [img]="Trash2" class="w-4 h-4 text-red-500"></lucide-icon>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                             }
@@ -218,3 +236,149 @@
         </div>
     </main>
 </div>
+
+<!-- Job Details Modal -->
+@if (showJobDetailModal()) {
+<div @modalFade class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+    (click)="closeJobDetailModal()">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
+        @if (isLoadingJobDetail()) {
+        <div class="p-8 text-center">
+            <div class="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-3">
+            </div>
+            <p class="text-gray-500">Loading job details...</p>
+        </div>
+        } @else if (selectedJob()) {
+        <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+            <h2 class="text-xl font-bold text-gray-900">Job Details</h2>
+            <button (click)="closeJobDetailModal()" class="p-2 hover:bg-gray-100 rounded-lg">
+                <lucide-icon [img]="X" class="w-5 h-5 text-gray-500"></lucide-icon>
+            </button>
+        </div>
+        <div class="p-6">
+            <h3 class="text-2xl font-bold text-gray-900 mb-2">{{ selectedJob()?.title }}</h3>
+            <div class="flex flex-wrap gap-4 mb-6">
+                <div class="flex items-center gap-2 text-gray-600">
+                    <lucide-icon [img]="Building2" class="w-4 h-4"></lucide-icon>
+                    <span>{{ selectedJob()?.companyName }}</span>
+                </div>
+                <div class="flex items-center gap-2 text-gray-600">
+                    <lucide-icon [img]="MapPin" class="w-4 h-4"></lucide-icon>
+                    <span>{{ selectedJob()?.location }}</span>
+                </div>
+                <div class="flex items-center gap-2 text-gray-600">
+                    <lucide-icon [img]="DollarSign" class="w-4 h-4"></lucide-icon>
+                    <span>{{ formatSalary(selectedJob()?.salaryMin || 0, selectedJob()?.salaryMax || 0) }}</span>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-2 mb-6">
+                <span
+                    class="px-3 py-1 text-sm font-medium rounded-full {{ getStatusBadgeClass(selectedJob()?.status || '') }}">
+                    {{ selectedJob()?.status }}
+                </span>
+                @if (selectedJob()?.jobType) {
+                <span class="px-3 py-1 text-sm font-medium rounded-full bg-blue-100 text-blue-700">
+                    {{ selectedJob()?.jobType }}
+                </span>
+                }
+                @if (selectedJob()?.experienceLevel) {
+                <span class="px-3 py-1 text-sm font-medium rounded-full bg-purple-100 text-purple-700">
+                    {{ selectedJob()?.experienceLevel }}
+                </span>
+                }
+            </div>
+
+            <div class="mb-6">
+                <h4 class="text-lg font-semibold text-gray-900 mb-2">Description</h4>
+                <p class="text-gray-600 whitespace-pre-line">{{ selectedJob()?.description || 'No description provided.'
+                    }}</p>
+            </div>
+
+            @if (selectedJob()?.requirements) {
+            <div class="mb-6">
+                <h4 class="text-lg font-semibold text-gray-900 mb-2">Requirements</h4>
+                <p class="text-gray-600 whitespace-pre-line">{{ selectedJob()?.requirements }}</p>
+            </div>
+            }
+
+            <div class="flex items-center gap-4 text-sm text-gray-500 border-t border-gray-100 pt-4">
+                <span>Posted: {{ selectedJob()?.createdAt }}</span>
+                <span>Applications: {{ selectedJob()?.applicationCount }}</span>
+            </div>
+        </div>
+        }
+    </div>
+</div>
+}
+
+<!-- Applications Modal -->
+@if (showApplicationsModal()) {
+<div @modalFade class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+    (click)="closeApplicationsModal()">
+    <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
+        <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+            <div>
+                <h2 class="text-xl font-bold text-gray-900">Applications</h2>
+                <p class="text-gray-500 text-sm">{{ selectedJobTitle() }}</p>
+            </div>
+            <button (click)="closeApplicationsModal()" class="p-2 hover:bg-gray-100 rounded-lg">
+                <lucide-icon [img]="X" class="w-5 h-5 text-gray-500"></lucide-icon>
+            </button>
+        </div>
+        <div class="p-6">
+            @if (isLoadingApplications()) {
+            <div class="text-center py-8">
+                <div
+                    class="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-3">
+                </div>
+                <p class="text-gray-500">Loading applications...</p>
+            </div>
+            } @else if (selectedJobApplications().length === 0) {
+            <div class="text-center py-12">
+                <lucide-icon [img]="Users" class="w-12 h-12 mx-auto mb-3 text-gray-300"></lucide-icon>
+                <p class="text-gray-500">No applications yet for this job.</p>
+            </div>
+            } @else {
+            <div class="space-y-4">
+                @for (app of selectedJobApplications(); track app.id) {
+                <div class="border border-gray-100 rounded-xl p-4 hover:bg-gray-50 transition-colors">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                                <lucide-icon [img]="User" class="w-5 h-5 text-white"></lucide-icon>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900">{{ app.applicantName }}</h4>
+                                <p class="text-sm text-gray-500">{{ app.applicantEmail }}</p>
+                            </div>
+                        </div>
+                        <span
+                            class="px-3 py-1 text-xs font-medium rounded-full {{ getApplicationStatusClass(app.status) }}">
+                            {{ app.status }}
+                        </span>
+                    </div>
+                    @if (app.coverLetter) {
+                    <div class="mb-3">
+                        <h5 class="text-sm font-medium text-gray-700 mb-1">Cover Letter</h5>
+                        <p class="text-gray-600 text-sm line-clamp-3">{{ app.coverLetter }}</p>
+                    </div>
+                    }
+                    <div class="flex items-center gap-4 text-sm text-gray-500">
+                        <span class="flex items-center gap-1">
+                            <lucide-icon [img]="Clock" class="w-4 h-4"></lucide-icon>
+                            Applied: {{ app.appliedAt }}
+                        </span>
+                        @if (app.resumeUrl) {
+                        <a [href]="app.resumeUrl" target="_blank" class="text-blue-500 hover:underline">View Resume</a>
+                        }
+                    </div>
+                </div>
+                }
+            </div>
+            }
+        </div>
+    </div>
+</div>
+}
