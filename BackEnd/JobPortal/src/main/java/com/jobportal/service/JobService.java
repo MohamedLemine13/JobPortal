@@ -292,11 +292,13 @@ public class JobService {
                     .description(profile.getDescription())
                     .size(profile.getCompanySize())
                     .industry(profile.getIndustry())
+                    .employerId(job.getEmployer().getId().toString())
                     .build();
         }
 
         return JobDto.builder()
                 .id(job.getId().toString())
+                .employerId(job.getEmployer().getId().toString())
                 .title(job.getTitle())
                 .description(job.getDescription())
                 .requirements(job.getRequirements())

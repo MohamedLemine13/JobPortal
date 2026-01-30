@@ -17,6 +17,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class JobDto {
     private String id;
+    private String employerId; // The employer's user ID for messaging
     private String title;
     private String description;
     private List<String> requirements;
@@ -48,5 +49,6 @@ public class JobDto {
         private String description;
         private String size;
         private String industry;
+        private String employerId;
     }
 }

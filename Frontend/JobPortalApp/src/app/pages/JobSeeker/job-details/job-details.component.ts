@@ -7,12 +7,14 @@ import { JobService } from '../../../services/job.service';
 import { SavedJobService } from '../../../services/saved-job.service';
 import { ApplicationService } from '../../../services/application.service';
 import { AuthService } from '../../../services/auth.service';
+import { ProfileService } from '../../../services/profile.service';
 
 interface JobDetails {
   id: string;
   title: string;
   company: string;
   companyId?: string;
+  employerId?: string;
   location: string;
   type: string;
   category: string;
@@ -25,6 +27,9 @@ interface JobDetails {
   experienceLevel: string;
   logoColor: string;
   companyLogo: string | null;
+  companyDescription: string | null;
+  companySize: string | null;
+  companyIndustry: string | null;
   hasApplied: boolean;
   isSaved: boolean;
 }
@@ -76,8 +81,9 @@ export class JobDetailsComponent implements OnInit, AfterViewInit {
     private savedJobService: SavedJobService,
     private applicationService: ApplicationService,
     private authService: AuthService,
+    private profileService: ProfileService,
     private router: Router
-  ) {}
+  ) { }
 
   ngAfterViewInit(): void {
     if (isPlatformBrowser(this.platformId)) {
@@ -163,24 +169,36 @@ export class JobDetailsComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    // Load user info
-    this.authService.currentUser$.subscribe(user => {
-      if (user) {
-        this.user.set({
-          name: user.fullName?.charAt(0) || 'U',
-          fullName: user.fullName,
-          email: user.email,
-          role: 'Job Seeker',
-          avatar: null
-        });
-      }
-    });
+    // Load user profile with avatar
+    this.loadUserProfile();
 
     // Fetch job details
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.loadJobDetails(id);
     }
+  }
+
+  loadUserProfile() {
+    this.profileService.getProfile().subscribe({
+      next: (response: any) => {
+        const data = response.data || response;
+        const profile = data.profile || {};
+        const userInfo = data.user || {};
+
+        const avatarUrl = this.profileService.getFileUrl(profile.avatar);
+        const fullName = profile.fullName || userInfo.email || 'User';
+
+        this.user.set({
+          name: fullName.charAt(0),
+          fullName: fullName,
+          email: userInfo.email || '',
+          role: 'Job Seeker',
+          avatar: avatarUrl
+        });
+      },
+      error: (err) => console.error('Failed to load profile', err)
+    });
   }
 
   loadJobDetails(jobId: string) {
@@ -190,9 +208,13 @@ export class JobDetailsComponent implements OnInit, AfterViewInit {
         console.log('Job details response:', response);
         const data = response.data || response;
         const jobData = data.job || data;
-        
+
         // Format salary
         let salaryDisplay = 'Competitive';
+        console.log('Raw Job Data:', jobData);
+        console.log('Employer ID from data:', jobData.employerId);
+        console.log('Company Employer ID:', jobData.company?.employerId);
+
         if (jobData.salaryMin && jobData.salaryMax) {
           const currency = jobData.salaryCurrency || '$';
           salaryDisplay = `${currency}${jobData.salaryMin.toLocaleString()} - ${currency}${jobData.salaryMax.toLocaleString()}`;
@@ -206,6 +228,7 @@ export class JobDetailsComponent implements OnInit, AfterViewInit {
           title: jobData.title || 'Untitled',
           company: jobData.company?.name || 'Unknown Company',
           companyId: jobData.company?.id,
+          employerId: jobData.employerId || jobData.company?.employerId,
           location: jobData.location || 'Remote',
           type: this.formatJobType(jobData.type || 'full_time'),
           category: jobData.category || 'General',
@@ -217,7 +240,10 @@ export class JobDetailsComponent implements OnInit, AfterViewInit {
           benefits: jobData.benefits || [],
           experienceLevel: jobData.experienceLevel || 'Not specified',
           logoColor: 'bg-blue-600',
-          companyLogo: jobData.company?.logo || null,
+          companyLogo: this.profileService.getFileUrl(jobData.company?.logo) || null,
+          companyDescription: jobData.company?.description || null,
+          companySize: jobData.company?.size || null,
+          companyIndustry: jobData.company?.industry || null,
           hasApplied: data.hasApplied || false,
           isSaved: data.isSaved || false
         });
@@ -247,7 +273,7 @@ export class JobDetailsComponent implements OnInit, AfterViewInit {
     if (!currentJob) return;
 
     this.isSaving.set(true);
-    
+
     if (currentJob.isSaved) {
       this.savedJobService.unsaveJob(currentJob.id).subscribe({
         next: () => {
@@ -279,7 +305,7 @@ export class JobDetailsComponent implements OnInit, AfterViewInit {
     if (!currentJob || currentJob.hasApplied) return;
 
     this.isApplying.set(true);
-    
+
     this.applicationService.applyForJob({ jobId: currentJob.id }).subscribe({
       next: () => {
         this.job.update(j => j ? { ...j, hasApplied: true } : j);
@@ -297,5 +323,18 @@ export class JobDetailsComponent implements OnInit, AfterViewInit {
   logout() {
     this.authService.logout();
     this.router.navigate(['/login']);
+  }
+
+  messageEmployer() {
+    const currentJob = this.job();
+    if (!currentJob?.employerId) {
+      // No employer ID, just navigate to messages
+      this.router.navigate(['/find-jobs/messages']);
+      return;
+    }
+    // Navigate to messages with chatWith param - this will auto-select or start conversation with employer
+    this.router.navigate(['/find-jobs/messages'], {
+      queryParams: { chatWith: currentJob.employerId }
+    });
   }
 }
