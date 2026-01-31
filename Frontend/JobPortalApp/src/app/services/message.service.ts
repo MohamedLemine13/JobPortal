@@ -67,24 +67,24 @@ export interface ConversationListResponse {
 export class MessageService {
   private apiUrl = `${environment.apiUrl}/messages`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
-  // Get all conversations for current user
+
   getConversations(page: number = 1, limit: number = 20): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/conversations?page=${page}&limit=${limit}`);
   }
 
-  // Get messages for a specific conversation
+
   getConversationMessages(conversationId: string, page: number = 1, limit: number = 50): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/conversations/${conversationId}?page=${page}&limit=${limit}`);
   }
 
-  // Start a new conversation
+
   startConversation(request: StartConversationRequest): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/conversations`, request);
   }
 
-  // Send a message to an existing conversation
+
   sendMessage(conversationId: string, request: SendMessageRequest): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/conversations/${conversationId}`, request);
   }

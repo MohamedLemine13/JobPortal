@@ -1,13 +1,13 @@
 import { Component, signal, OnInit } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { trigger, transition, style, animate } from '@angular/animations';
-import { 
-  LucideAngularModule, 
-  Briefcase, 
-  LayoutDashboard, 
-  Plus, 
-  FileText, 
-  Building2, 
+import {
+  LucideAngularModule,
+  Briefcase,
+  LayoutDashboard,
+  Plus,
+  FileText,
+  Building2,
   LogOut,
   TrendingUp,
   Users,
@@ -26,10 +26,11 @@ import { AuthService } from '../../../services/auth.service';
 import { JobService } from '../../../services/job.service';
 import { ApplicationService } from '../../../services/application.service';
 import { ProfileService } from '../../../services/profile.service';
+import { ChatbotComponent } from '../../../components/chatbot/chatbot.component';
 
 @Component({
   selector: 'app-employer-dashboard',
-  imports: [RouterLink, RouterLinkActive, LucideAngularModule],
+  imports: [RouterLink, RouterLinkActive, LucideAngularModule, ChatbotComponent],
   templateUrl: './employer-dashboard.component.html',
   animations: [
     trigger('fadeInUp', [
@@ -58,22 +59,22 @@ import { ProfileService } from '../../../services/profile.service';
 export class EmployerDashboardComponent implements OnInit {
 
   constructor(
-    private authService: AuthService, 
+    private authService: AuthService,
     private router: Router,
     private jobService: JobService,
     private applicationService: ApplicationService,
     private profileService: ProfileService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     if (!this.authService.getToken()) {
-        this.router.navigate(['/login']);
-        return;
+      this.router.navigate(['/login']);
+      return;
     }
 
     // Load user profile with avatar
     this.loadUserProfile();
-    
+
     // Subscribe to user changes
     this.authService.currentUser$.subscribe(user => {
       if (user) {
@@ -95,13 +96,13 @@ export class EmployerDashboardComponent implements OnInit {
         const data = response.data || response;
         const profile = data.profile || {};
         const userInfo = data.user || {};
-        
+
         console.log('Profile data:', profile);
         console.log('Avatar from profile:', profile.avatar);
-        
+
         const avatarUrl = this.profileService.getFileUrl(profile.avatar);
         console.log('Constructed avatar URL:', avatarUrl);
-        
+
         this.user.set({
           name: profile.fullName || profile.companyName || userInfo.email || 'User',
           email: userInfo.email || '',
@@ -119,30 +120,30 @@ export class EmployerDashboardComponent implements OnInit {
       next: (response: any) => {
         console.log('Dashboard API Response:', response);
         const data = response.data || response;
-        
+
         // Update stats
         if (data.stats) {
           this.stats.set([
-            { 
-              label: 'Active Jobs', 
-              value: data.stats.activeJobs || 0, 
-              growth: '+100%', 
+            {
+              label: 'Active Jobs',
+              value: data.stats.activeJobs || 0,
+              growth: '+100%',
               icon: Briefcase,
               bgColor: 'bg-linear-to-br from-blue-500 to-blue-600',
               iconBg: 'bg-white/20'
             },
-            { 
-              label: 'Total Applicants', 
-              value: data.stats.totalApplicants || 0, 
-              growth: '+100%', 
+            {
+              label: 'Total Applicants',
+              value: data.stats.totalApplicants || 0,
+              growth: '+100%',
               icon: Users,
               bgColor: 'bg-linear-to-br from-green-500 to-green-600',
               iconBg: 'bg-white/20'
             },
-            { 
-              label: 'Hired', 
-              value: data.stats.hiredCount || 0, 
-              growth: '+100%', 
+            {
+              label: 'Hired',
+              value: data.stats.hiredCount || 0,
+              growth: '+100%',
               icon: CheckCircle,
               bgColor: 'bg-linear-to-br from-purple-500 to-purple-600',
               iconBg: 'bg-white/20'
@@ -173,11 +174,11 @@ export class EmployerDashboardComponent implements OnInit {
         console.log('Recent applications response:', response);
         const data = response.data || response;
         const applications = data.applications || [];
-        
+
         const recentApps = applications.slice(0, 3).map((app: any) => {
           const name = app.applicant?.fullName || 'Unknown';
           const initials = name.split(' ').map((n: string) => n.charAt(0).toUpperCase()).join('').slice(0, 2);
-          
+
           // Calculate time ago
           let timeAgo = 'Recently';
           if (app.appliedAt) {
@@ -186,7 +187,7 @@ export class EmployerDashboardComponent implements OnInit {
             const diffMs = now.getTime() - appliedDate.getTime();
             const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
             const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-            
+
             if (diffDays > 0) {
               timeAgo = `${diffDays}d ago`;
             } else if (diffHours > 0) {
@@ -195,10 +196,10 @@ export class EmployerDashboardComponent implements OnInit {
               timeAgo = 'Just now';
             }
           }
-          
+
           // Get proper avatar URL using profileService
           const avatarUrl = this.profileService.getFileUrl(app.applicant?.avatar);
-          
+
           return {
             id: app.id,
             name: name,
@@ -209,7 +210,7 @@ export class EmployerDashboardComponent implements OnInit {
             avatar: avatarUrl
           };
         });
-        
+
         this.recentApplications.set(recentApps);
       },
       error: (err: any) => console.error('Failed to fetch recent applications', err)
@@ -299,26 +300,26 @@ export class EmployerDashboardComponent implements OnInit {
 
   // Stats data
   stats = signal([
-    { 
-      label: 'Active Jobs', 
-      value: 0, 
-      growth: '+100%', 
+    {
+      label: 'Active Jobs',
+      value: 0,
+      growth: '+100%',
       icon: Briefcase,
       bgColor: 'bg-linear-to-br from-blue-500 to-blue-600',
       iconBg: 'bg-white/20'
     },
-    { 
-      label: 'Total Applicants', 
-      value: 0, 
-      growth: '+100%', 
+    {
+      label: 'Total Applicants',
+      value: 0,
+      growth: '+100%',
       icon: Users,
       bgColor: 'bg-linear-to-br from-green-500 to-green-600',
       iconBg: 'bg-white/20'
     },
-    { 
-      label: 'Hired', 
-      value: 0, 
-      growth: '+100%', 
+    {
+      label: 'Hired',
+      value: 0,
+      growth: '+100%',
       icon: CheckCircle,
       bgColor: 'bg-linear-to-br from-purple-500 to-purple-600',
       iconBg: 'bg-white/20'

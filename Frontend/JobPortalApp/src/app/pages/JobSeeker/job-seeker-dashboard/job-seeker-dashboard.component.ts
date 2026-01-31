@@ -10,6 +10,8 @@ import { ApplicationService } from '../../../services/application.service';
 import { ProfileService } from '../../../services/profile.service';
 import { Job as ApiJob } from '../../../models/job.models';
 import { User as AuthUser } from '../../../models/auth.models';
+import { ChatbotComponent } from '../../../components/chatbot/chatbot.component';
+import { ToastService } from '../../../services/toast.service';
 
 interface Job {
   id: string;
@@ -28,9 +30,8 @@ interface Job {
 
 @Component({
   selector: 'app-job-seeker-dashboard',
-  imports: [RouterLink, RouterLinkActive, LucideAngularModule],
+  imports: [RouterLink, RouterLinkActive, LucideAngularModule, ChatbotComponent],
   templateUrl: './job-seeker-dashboard.component.html',
-  // ... (keep animations as is)
   animations: [
     trigger('fadeInUp', [
       state('hidden', style({ opacity: 0, transform: 'translateY(30px)' })),
@@ -62,7 +63,6 @@ interface Job {
   ]
 })
 export class JobSeekerDashboardComponent implements AfterViewInit, OnInit {
-  // ... (keep ViewChilds and cleanup)
   @ViewChild('heroSection') heroSection!: ElementRef;
   @ViewChild('filtersSection') filtersSection!: ElementRef;
   @ViewChild('jobsSection') jobsSection!: ElementRef;
@@ -72,27 +72,28 @@ export class JobSeekerDashboardComponent implements AfterViewInit, OnInit {
   jobsVisible = false;
 
   constructor(
-    @Inject(PLATFORM_ID) private platformId: Object, 
+    @Inject(PLATFORM_ID) private platformId: Object,
     private jobService: JobService,
     private authService: AuthService,
     private savedJobService: SavedJobService,
     private applicationService: ApplicationService,
     private router: Router,
-    private profileService: ProfileService
-  ) {}
+    private profileService: ProfileService,
+    private toastService: ToastService
+  ) { }
 
   // Icons
   readonly BookmarkCheck = BookmarkCheck;
 
   ngOnInit(): void {
     if (!this.authService.getToken()) {
-        this.router.navigate(['/login']);
-        return;
+      this.router.navigate(['/login']);
+      return;
     }
 
     // Load user profile with avatar
     this.loadUserProfile();
-    
+
     // Subscribe to user changes
     this.authService.currentUser$.subscribe(user => {
       if (user) {
@@ -115,10 +116,10 @@ export class JobSeekerDashboardComponent implements AfterViewInit, OnInit {
         const data = response.data || response;
         const profile = data.profile || {};
         const userInfo = data.user || {};
-        
+
         const avatarUrl = this.profileService.getFileUrl(profile.avatar);
         const fullName = profile.fullName || userInfo.email || 'User';
-        
+
         this.user.set({
           name: fullName.split(' ')[0],
           fullName: fullName,
@@ -147,7 +148,7 @@ export class JobSeekerDashboardComponent implements AfterViewInit, OnInit {
         const savedIds = new Set<string>(savedJobs.map((sj: any) => sj.job?.id || sj.id));
         this.savedJobIds.set(savedIds);
       },
-      error: () => {}
+      error: () => { }
     });
 
     // Fetch applied jobs with their statuses
@@ -155,7 +156,7 @@ export class JobSeekerDashboardComponent implements AfterViewInit, OnInit {
       next: (response: any) => {
         const data = response.data || response;
         const applications = data.applications || [];
-        
+
         // Create a map of jobId -> application status
         const applicationStatusMap = new Map<string, string>();
         applications.forEach((app: any) => {
@@ -163,10 +164,10 @@ export class JobSeekerDashboardComponent implements AfterViewInit, OnInit {
           applicationStatusMap.set(jobId, app.status || 'pending');
         });
         this.applicationStatusMap.set(applicationStatusMap);
-        
+
         const appliedIds = new Set<string>(applications.map((app: any) => app.job?.id || app.jobId || ''));
         this.appliedJobIds.set(appliedIds);
-        
+
         // Now fetch all jobs
         this.fetchAllJobs();
       },
@@ -181,15 +182,15 @@ export class JobSeekerDashboardComponent implements AfterViewInit, OnInit {
     this.jobService.getJobs().subscribe({
       next: (response: any) => {
         console.log('Jobs API Response:', response);
-        
+
         // Backend returns: { data: { jobs: [...], pagination: {...} } }
         const data = response.data || response;
         const jobsArray = data.jobs || data.content || (Array.isArray(data) ? data : []);
         console.log('Jobs array length:', jobsArray.length);
-        
+
         const savedIds = this.savedJobIds();
         const appliedIds = this.appliedJobIds();
-        
+
         const mappedJobs: Job[] = jobsArray.map((apiJob: any) => {
           // Format salary display
           let salaryDisplay = 'Competitive';
@@ -200,18 +201,18 @@ export class JobSeekerDashboardComponent implements AfterViewInit, OnInit {
               salaryDisplay += ` / ${apiJob.salaryPeriod}`;
             }
           }
-          
+
           const jobId = apiJob.id?.toString() || '';
           const hasApplied = appliedIds.has(jobId);
           const applicationStatusMap = this.applicationStatusMap();
           const appStatus = applicationStatusMap.get(jobId);
-          
+
           // Determine display status based on application status
           let displayStatus: Job['status'] = 'Apply Now';
           if (hasApplied) {
             displayStatus = this.mapApplicationStatus(appStatus);
           }
-          
+
           return {
             id: jobId,
             title: apiJob.title || 'Untitled',
@@ -227,7 +228,7 @@ export class JobSeekerDashboardComponent implements AfterViewInit, OnInit {
             bookmarked: savedIds.has(jobId)
           } as Job;
         });
-        
+
         console.log('Mapped jobs:', mappedJobs);
         this.jobs.set(mappedJobs);
       },
@@ -385,7 +386,7 @@ export class JobSeekerDashboardComponent implements AfterViewInit, OnInit {
 
     // Filter by search query
     if (this.searchQuery()) {
-      const query = this.searchQuery().toLowerCase();
+      const query = this.searchQuery().toLowerCase().trim();
       result = result.filter(job =>
         job.title.toLowerCase().includes(query) ||
         job.company.toLowerCase().includes(query)
@@ -394,27 +395,45 @@ export class JobSeekerDashboardComponent implements AfterViewInit, OnInit {
 
     // Filter by location
     if (this.locationQuery()) {
-      const location = this.locationQuery().toLowerCase();
+      const location = this.locationQuery().toLowerCase().trim();
       result = result.filter(job => job.location.toLowerCase().includes(location));
     }
 
     // Filter by job types
     if (this.selectedJobTypes().length > 0) {
-      result = result.filter(job => this.selectedJobTypes().includes(job.type));
+      result = result.filter(job =>
+        this.selectedJobTypes().some(type =>
+          type.toLowerCase() === job.type.toLowerCase()
+        )
+      );
     }
 
     // Filter by categories
     if (this.selectedCategories().length > 0) {
-      result = result.filter(job => this.selectedCategories().includes(job.category));
+      result = result.filter(job =>
+        this.selectedCategories().some(cat =>
+          cat.toLowerCase() === job.category.toLowerCase()
+        )
+      );
     }
 
     // Filter by salary range
     const minSal = parseInt(this.minSalary()) || 0;
-    const maxSal = parseInt(this.maxSalary()) || Infinity;
-    result = result.filter(job => {
-      const salary = parseInt(job.salary.replace(/[^0-9]/g, '')) || 0;
-      return salary >= minSal && salary <= maxSal;
-    });
+    const maxSal = (this.maxSalary() && this.maxSalary() !== '') ? parseInt(this.maxSalary()) : Infinity;
+
+    if (minSal > 0 || maxSal !== Infinity) {
+      result = result.filter(job => {
+        // Handle "Competitive" or text-only salaries
+        const salaryStr = job.salary.replace(/,/g, '');
+        const matches = salaryStr.match(/\d+/);
+
+        // If no number found, only show if no strict min salary filter is set
+        if (!matches) return minSal === 0;
+
+        const salary = parseInt(matches[0]);
+        return salary >= minSal && salary <= maxSal;
+      });
+    }
 
     return result;
   });
@@ -438,7 +457,7 @@ export class JobSeekerDashboardComponent implements AfterViewInit, OnInit {
 
   toggleBookmark(jobId: string, event: Event) {
     event.stopPropagation(); // Prevent navigating to job details
-    
+
     const job = this.jobs().find(j => j.id === jobId);
     if (!job) return;
 
@@ -489,7 +508,7 @@ export class JobSeekerDashboardComponent implements AfterViewInit, OnInit {
   applyForJob(jobId: string) {
     // Check if already applied
     if (this.appliedJobIds().has(jobId)) return;
-    
+
     this.applicationService.applyForJob({ jobId }).subscribe({
       next: () => {
         // Update the job status in the list
@@ -504,10 +523,14 @@ export class JobSeekerDashboardComponent implements AfterViewInit, OnInit {
           newIds.add(jobId);
           return newIds;
         });
+
+        // Show success toast
+        this.toastService.success('Application submitted successfully!');
       },
       error: (err) => {
         console.error('Failed to apply for job', err);
-        alert(err.error?.message || 'Failed to apply. Please try again.');
+        // Show error toast
+        this.toastService.error(err.error?.message || 'Failed to apply. Please try again.');
       }
     });
   }

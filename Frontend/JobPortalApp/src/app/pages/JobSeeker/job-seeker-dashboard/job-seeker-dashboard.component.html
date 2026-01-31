@@ -319,7 +319,8 @@
                                 Apply Now
                             </button>
                             } @else {
-                            <span [class]="'px-5 py-2 text-sm font-medium rounded-lg border ' + getStatusColor(job.status)">
+                            <span
+                                [class]="'px-5 py-2 text-sm font-medium rounded-lg border ' + getStatusColor(job.status)">
                                 {{ job.status }}
                             </span>
                             }
@@ -392,7 +393,8 @@
                                 Apply Now
                             </button>
                             } @else {
-                            <span [class]="'px-5 py-2 text-sm font-medium rounded-full border ' + getStatusColor(job.status)">
+                            <span
+                                [class]="'px-5 py-2 text-sm font-medium rounded-full border ' + getStatusColor(job.status)">
                                 {{ job.status }}
                             </span>
                             }
@@ -414,3 +416,6 @@
         </div>
     </div>
 </div>
+
+<!-- Chatbot Widget -->
+<app-chatbot></app-chatbot>

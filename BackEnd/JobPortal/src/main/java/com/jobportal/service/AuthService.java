@@ -108,7 +108,7 @@ public class AuthService {
                 .build();
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = UnauthorizedException.class)
     public AuthResponse login(LoginRequest request) {
         // Check if user exists first
         User user = userRepository.findByEmail(request.getEmail()).orElse(null);

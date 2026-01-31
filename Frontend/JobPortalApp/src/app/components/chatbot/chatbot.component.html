@@ -1,0 +1,519 @@
+<!-- Chatbot Widget Premium -->
+<div class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 font-inter">
+
+  <!-- Bouton de toggle avec effet glow -->
+  <button (click)="toggleChat()" class="group relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl border-none text-white cursor-pointer 
+           flex items-center justify-center transition-all duration-500
+           bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600
+           shadow-[0_8px_30px_-5px_rgba(16,185,129,0.5)]
+           hover:shadow-[0_15px_40px_-5px_rgba(16,185,129,0.6)]
+           hover:scale-110 hover:-translate-y-1
+           active:scale-95" [class.rotate-0]="!isOpen" [class.rotate-180]="isOpen">
+    <!-- Glow effect -->
+    <div class="absolute inset-0 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-400 blur-xl opacity-40 
+                group-hover:opacity-60 transition-opacity duration-500 -z-10"></div>
+
+    <!-- Pulse ring -->
+    <div class="absolute inset-0 rounded-2xl border-2 border-emerald-400/50 animate-ping opacity-30"
+      *ngIf="!isOpen && messages.length === 1"></div>
+
+    <!-- Icon -->
+    <i class="fa-solid fa-comments text-xl sm:text-2xl drop-shadow-lg transition-transform duration-500"
+      [class.rotate-180]="isOpen"></i>
+
+    <!-- Badge notification -->
+    <span class="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-red-500 to-pink-500 
+                text-white text-[10px] rounded-full font-bold flex items-center justify-center
+                shadow-lg animate-bounce" *ngIf="!isOpen && messages.length === 1">!</span>
+  </button>
+
+  <!-- Fenêtre de chat avec glassmorphism -->
+  <div *ngIf="isOpen" class="absolute bottom-20 sm:bottom-24 right-0 w-[calc(100vw-2rem)] sm:w-[420px] max-h-[75vh] 
+              bg-white/95 backdrop-blur-2xl rounded-3xl 
+              shadow-[0_25px_80px_-15px_rgba(0,0,0,0.3)] 
+              flex flex-col overflow-hidden 
+              border border-white/50
+              animate-slideUp">
+
+    <!-- En-tête premium avec background animé -->
+    <div class="relative bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 text-white p-4 sm:p-5 
+                flex justify-between items-center overflow-hidden">
+
+      <!-- Animated background gradient -->
+      <div class="absolute inset-0 bg-gradient-to-r from-emerald-600 via-teal-500 to-emerald-600 
+                  bg-[length:200%_100%] animate-gradientFlow"></div>
+
+      <!-- Floating particles -->
+      <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute w-2 h-2 bg-white/30 rounded-full top-2 left-[10%] animate-floatParticle"></div>
+        <div class="absolute w-1.5 h-1.5 bg-white/20 rounded-full top-4 left-[30%] animate-floatParticle"
+          style="animation-delay: 0.5s"></div>
+        <div class="absolute w-2.5 h-2.5 bg-white/25 rounded-full top-1 left-[50%] animate-floatParticle"
+          style="animation-delay: 1s"></div>
+        <div class="absolute w-1 h-1 bg-white/30 rounded-full top-3 left-[70%] animate-floatParticle"
+          style="animation-delay: 1.5s"></div>
+        <div class="absolute w-2 h-2 bg-white/20 rounded-full top-2 left-[85%] animate-floatParticle"
+          style="animation-delay: 2s"></div>
+
+        <!-- Sparkles -->
+        <div class="absolute w-1 h-1 bg-white rounded-full top-3 left-[20%] animate-sparkle"></div>
+        <div class="absolute w-1 h-1 bg-white rounded-full top-5 left-[60%] animate-sparkle"
+          style="animation-delay: 0.7s"></div>
+        <div class="absolute w-1 h-1 bg-white rounded-full top-2 left-[80%] animate-sparkle"
+          style="animation-delay: 1.4s"></div>
+      </div>
+
+      <!-- Glowing orbs -->
+      <div class="absolute -top-10 -left-10 w-32 h-32 bg-teal-400/30 rounded-full blur-2xl animate-pulse"></div>
+      <div class="absolute -bottom-10 -right-10 w-28 h-28 bg-emerald-300/30 rounded-full blur-2xl animate-pulse"
+        style="animation-delay: 1s"></div>
+
+      <!-- Wave effect -->
+      <div class="absolute bottom-0 left-0 right-0 h-8 overflow-hidden">
+        <div class="absolute bottom-0 left-0 right-0 h-16 bg-white/5 rounded-[100%] translate-y-1/2 animate-wave"></div>
+        <div class="absolute bottom-0 left-0 right-0 h-16 bg-white/5 rounded-[100%] translate-y-1/2 animate-wave"
+          style="animation-delay: 0.5s"></div>
+      </div>
+
+      <!-- Background pattern circles -->
+      <div class="absolute inset-0 opacity-10">
+        <div class="absolute top-0 left-0 w-32 h-32 bg-white rounded-full -translate-x-1/2 -translate-y-1/2"></div>
+        <div class="absolute bottom-0 right-0 w-24 h-24 bg-white rounded-full translate-x-1/2 translate-y-1/2"></div>
+      </div>
+
+      <div class="relative flex items-center gap-3">
+        <!-- Avatar avec animation -->
+        <div class="relative">
+          <div class="w-11 h-11 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-xl 
+                      flex items-center justify-center border border-white/30
+                      shadow-lg">
+            <i class="fa-solid fa-robot text-lg sm:text-xl"></i>
+          </div>
+          <!-- Status indicator -->
+          <span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-400 rounded-full 
+                       border-2 border-white shadow-sm">
+            <span class="absolute inset-0 bg-green-400 rounded-full animate-ping opacity-75"></span>
+          </span>
+        </div>
+
+        <div>
+          <h3 class="m-0 text-sm sm:text-base font-bold tracking-wide">JobPortal Assistant</h3>
+          <span class="text-xs text-white/80 flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full" [class.bg-green-300]="ragAvailable"
+              [class.bg-yellow-300]="!ragAvailable"></span>
+            {{ ragAvailable ? 'Online • Ready to help' : 'AI Service Unavailable' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Bouton fermer -->
+      <button (click)="toggleChat()" class="relative w-9 h-9 bg-white/10 backdrop-blur-sm border border-white/20 
+                     text-white rounded-xl cursor-pointer 
+                     flex items-center justify-center transition-all duration-300
+                     hover:bg-white/20 hover:scale-110 hover:rotate-90
+                     active:scale-95">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+
+    <!-- Zone des messages -->
+    <div class="chat-messages flex-1 overflow-y-auto p-4 flex flex-col gap-4 max-h-[400px] sm:max-h-[450px]
+                bg-gradient-to-b from-gray-50/50 to-white
+                scrollbar-thin scrollbar-thumb-emerald-200 scrollbar-track-transparent">
+
+      <div *ngFor="let message of messages; let i = index" class="flex flex-col max-w-[85%] animate-fadeIn"
+        [class.self-end]="message.type === 'user'" [class.self-start]="message.type === 'bot'"
+        [style.animation-delay]="i * 0.05 + 's'">
+        <!-- Message bubble -->
+        <div class="relative p-3.5 sm:p-4 rounded-2xl shadow-sm transition-all duration-300 hover:shadow-md" [ngClass]="{
+               'bg-gradient-to-br from-emerald-500 to-teal-500 text-white rounded-br-md': message.type === 'user',
+               'bg-white border border-gray-100 text-gray-700 rounded-bl-md shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)]': message.type === 'bot'
+             }">
+
+          <!-- Bot avatar mini -->
+          <div *ngIf="message.type === 'bot'" class="absolute -left-2 -top-2 w-6 h-6 bg-gradient-to-br from-emerald-500 to-teal-500 
+                      rounded-lg flex items-center justify-center shadow-md">
+            <i class="fa-solid fa-robot text-[10px] text-white"></i>
+          </div>
+
+          <div class="text-sm leading-relaxed" [innerHTML]="formatMessage(message.content)"></div>
+
+          <!-- Sources des documents utilisés -->
+          <div *ngIf="message.type === 'bot' && message.sources && message.sources.length > 0"
+            class="mt-3 pt-3 border-t border-gray-100/80">
+            <div class="flex items-center gap-1.5 mb-2">
+              <i class="fa-solid fa-book-open text-[10px] text-emerald-500"></i>
+              <strong class="text-[10px] text-gray-500 font-semibold uppercase tracking-wide">
+                Sources ({{message.sources.length}})
+              </strong>
+            </div>
+            <div class="flex flex-col gap-2">
+              <div *ngFor="let source of message.sources; let i = index" class="bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 
+                          p-2 rounded-lg text-[11px] border border-emerald-100 
+                          shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-center gap-1.5 font-medium">
+                  <i class="fa-solid fa-file-pdf text-emerald-500"></i>
+                  <span class="truncate">{{ source.source.split('/').pop() }}</span>
+                  <span class="ml-auto text-emerald-500 text-[9px]">
+                    {{ (source.relevance_score * 100).toFixed(0) }}%
+                  </span>
+                </div>
+                <p *ngIf="source.content_preview" class="mt-1 text-[10px] text-gray-600 line-clamp-2">
+                  {{ source.content_preview.substring(0, 150) }}...
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Error indicator with retry -->
+          <div *ngIf="message.isError" class="mt-2 flex items-center justify-between">
+            <div class="flex items-center gap-1.5 text-red-500">
+              <i class="fa-solid fa-exclamation-triangle text-[10px]"></i>
+              <span class="text-[10px] font-medium">An error occurred</span>
+            </div>
+            <button *ngIf="lastQuestion" (click)="retryLastQuestion()" class="text-[10px] text-emerald-600 hover:text-emerald-700 font-medium 
+                           flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-emerald-50 transition-colors">
+              <i class="fa-solid fa-rotate-right"></i>
+              Retry
+            </button>
+          </div>
+        </div>
+
+        <!-- Timestamp -->
+        <div class="text-[10px] text-gray-400 mt-1.5 px-1 flex items-center gap-1"
+          [class.self-end]="message.type === 'user'" [class.self-start]="message.type === 'bot'">
+          <i class="fa-regular fa-clock"></i>
+          {{message.timestamp | date:'HH:mm'}}
+        </div>
+      </div>
+
+      <!-- Indicateur de chargement premium -->
+      <div *ngIf="isLoading" class="flex flex-col max-w-[85%] self-start animate-fadeIn">
+        <div class="relative bg-white p-4 rounded-2xl rounded-bl-md border border-gray-100 
+                    shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)]">
+          <!-- Bot avatar mini -->
+          <div class="absolute -left-2 -top-2 w-6 h-6 bg-gradient-to-br from-emerald-500 to-teal-500 
+                      rounded-lg flex items-center justify-center shadow-md">
+            <i class="fa-solid fa-robot text-[10px] text-white"></i>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <!-- Typing animation -->
+            <div class="flex gap-1.5">
+              <span
+                class="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-emerald-400 to-teal-400 animate-bounce"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-emerald-400 to-teal-400 animate-bounce"
+                style="animation-delay: 0.15s"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-emerald-400 to-teal-400 animate-bounce"
+                style="animation-delay: 0.3s"></span>
+            </div>
+            <div class="flex flex-col">
+              <span class="text-xs text-gray-500 font-medium">Thinking...</span>
+              <span class="text-[10px] text-gray-400">{{ loadingTime }}s</span>
+            </div>
+            <button (click)="cancelRequest()" class="ml-auto text-xs text-red-500 hover:text-red-600 font-semibold 
+                           transition-colors px-2 py-1 rounded-lg hover:bg-red-50">
+              <i class="fa-solid fa-xmark mr-1"></i>Cancel
+            </button>
+          </div>
+
+          <!-- Long wait warning -->
+          <div *ngIf="loadingTime > 15" class="mt-2 text-[10px] text-amber-600 bg-amber-50 rounded-lg px-2 py-1">
+            <i class="fa-solid fa-clock mr-1"></i>
+            AI is analyzing documents, this may take a moment...
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Zone de saisie premium -->
+    <div class="p-3 border-t border-gray-100/80 bg-white rounded-b-3xl">
+
+      <!-- Message d'erreur vocale -->
+      <div *ngIf="voiceError" class="mb-3 text-xs text-red-500 text-center flex items-center justify-center gap-2
+                  bg-red-50 border border-red-100 rounded-lg py-2 px-3 animate-fadeIn">
+        <i class="fa-solid fa-exclamation-circle"></i>
+        <span>{{ voiceError }}</span>
+      </div>
+
+      <!-- Indicateur d'écoute vocale -->
+      <div *ngIf="isListening" class="mb-3 text-xs text-emerald-600 text-center flex items-center justify-center gap-2
+                  bg-emerald-50 border border-emerald-200 rounded-lg py-3 px-3 animate-fadeIn">
+        <div class="flex items-center gap-1">
+          <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+          <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse" style="animation-delay: 0.2s"></span>
+          <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse" style="animation-delay: 0.4s"></span>
+        </div>
+        <span class="font-medium">🎤 Speak now...</span>
+        <button (click)="stopListening()" class="ml-2 text-red-500 hover:text-red-600 font-semibold transition-colors">
+          Stop
+        </button>
+      </div>
+
+      <!-- Input container -->
+      <div class="flex gap-2 items-center">
+        <div class="relative flex-1">
+          <input type="text" [(ngModel)]="currentMessage" (keypress)="onKeyPress($event)"
+            [placeholder]="isListening ? 'Listening...' : 'Ask your question...'" class="w-full px-4 py-3 sm:py-3.5 pr-4
+                   bg-gray-50 border-2 rounded-xl 
+                   text-sm text-gray-700 placeholder-gray-400
+                   outline-none transition-all duration-300
+                   focus:bg-white focus:border-emerald-400 focus:shadow-[0_0_0_4px_rgba(16,185,129,0.1)]
+                   hover:border-gray-200
+                   disabled:opacity-50 disabled:cursor-not-allowed" [class.border-gray-100]="!isListening"
+            [class.border-emerald-400]="isListening" [class.bg-emerald-50]="isListening" [disabled]="isLoading" />
+        </div>
+
+        <!-- Voice button - Bouton microphone -->
+        <button *ngIf="!isListening" (click)="toggleVoiceInput()" class="group relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl border-none cursor-pointer 
+                 flex items-center justify-center transition-all duration-300
+                 bg-gradient-to-br from-purple-500 to-pink-500 text-white
+                 shadow-md hover:shadow-lg hover:scale-105 active:scale-95
+                 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+          [disabled]="isLoading || !speechSupported" title="Voice command 🎤">
+          <div class="absolute inset-0 rounded-xl bg-gradient-to-br from-pink-500 to-purple-500 
+                      opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <i class="fa-solid fa-microphone relative z-10 text-sm"></i>
+        </button>
+
+        <!-- Voice button - État écoute (rouge avec animation) -->
+        <button *ngIf="isListening" (click)="toggleVoiceInput()" class="group relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl border-none cursor-pointer 
+                 flex items-center justify-center transition-all duration-300
+                 bg-red-500 text-white animate-pulse
+                 shadow-md hover:shadow-lg hover:scale-105 active:scale-95" title="Stop listening">
+          <!-- Glow effect when listening -->
+          <div class="absolute inset-0 rounded-xl bg-red-400 blur-md opacity-50 animate-pulse -z-10"></div>
+
+          <!-- Sound waves animation when listening -->
+          <div class="absolute inset-0 flex items-center justify-center">
+            <div class="absolute w-full h-full rounded-xl border-2 border-red-300 animate-ping opacity-30"></div>
+          </div>
+
+          <i class="fa-solid fa-stop relative z-10 text-sm"></i>
+        </button>
+
+        <!-- Send button -->
+        <button (click)="sendMessage()" class="group relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl border-none text-white cursor-pointer 
+                 flex items-center justify-center transition-all duration-300
+                 bg-gradient-to-br from-emerald-500 to-teal-500
+                 shadow-md hover:shadow-lg hover:scale-105 active:scale-95
+                 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-md"
+          [disabled]="!currentMessage.trim() || isLoading || isListening">
+          <div class="absolute inset-0 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-500 
+                      opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <i class="fa-solid fa-paper-plane text-sm relative z-10 
+                    group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300"></i>
+        </button>
+      </div>
+
+      <!-- Footer -->
+      <div class="mt-2 pt-2 border-t border-gray-100 flex items-center justify-center gap-2 text-[10px] text-gray-400">
+        <i class="fa-solid fa-brain text-emerald-400"></i>
+        <span>Powered by RAG • Based on your documents</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* ========== ANIMATIONS DE BASE ========== */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.95);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .animate-fadeIn {
+    animation: fadeIn 0.4s ease-out forwards;
+  }
+
+  .animate-slideUp {
+    animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  /* ========== ANIMATIONS DU BACKGROUND ========== */
+
+  /* Gradient flow animation */
+  @keyframes gradientFlow {
+    0% {
+      background-position: 0% 50%;
+    }
+
+    50% {
+      background-position: 100% 50%;
+    }
+
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  .animate-gradientFlow {
+    animation: gradientFlow 6s ease infinite;
+  }
+
+  /* Floating particles */
+  @keyframes floatParticle {
+
+    0%,
+    100% {
+      transform: translateY(0) translateX(0);
+      opacity: 0.3;
+    }
+
+    25% {
+      transform: translateY(-15px) translateX(5px);
+      opacity: 0.6;
+    }
+
+    50% {
+      transform: translateY(-25px) translateX(-5px);
+      opacity: 0.4;
+    }
+
+    75% {
+      transform: translateY(-15px) translateX(3px);
+      opacity: 0.5;
+    }
+  }
+
+  .animate-floatParticle {
+    animation: floatParticle 4s ease-in-out infinite;
+  }
+
+  /* Sparkle effect */
+  @keyframes sparkle {
+
+    0%,
+    100% {
+      opacity: 0;
+      transform: scale(0);
+    }
+
+    50% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .animate-sparkle {
+    animation: sparkle 2s ease-in-out infinite;
+  }
+
+  /* Wave effect */
+  @keyframes wave {
+    0% {
+      transform: translateY(50%) translateX(-5%);
+    }
+
+    50% {
+      transform: translateY(50%) translateX(5%);
+    }
+
+    100% {
+      transform: translateY(50%) translateX(-5%);
+    }
+  }
+
+  .animate-wave {
+    animation: wave 3s ease-in-out infinite;
+  }
+
+  /* Glow pulse */
+  @keyframes glowPulse {
+
+    0%,
+    100% {
+      opacity: 0.3;
+      transform: scale(1);
+    }
+
+    50% {
+      opacity: 0.5;
+      transform: scale(1.1);
+    }
+  }
+
+  .animate-glowPulse {
+    animation: glowPulse 3s ease-in-out infinite;
+  }
+
+  /* Rotate slow */
+  @keyframes rotateSlow {
+    from {
+      transform: rotate(0deg);
+    }
+
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .animate-rotateSlow {
+    animation: rotateSlow 20s linear infinite;
+  }
+
+  /* Shimmer effect */
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  .animate-shimmer {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  /* ========== CUSTOM SCROLLBAR ========== */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: linear-gradient(to bottom, #a7f3d0, #6ee7b7);
+    border-radius: 10px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(to bottom, #6ee7b7, #34d399);
+  }
+
+  /* ========== HOVER EFFECTS ========== */
+  .hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  }
+</style>

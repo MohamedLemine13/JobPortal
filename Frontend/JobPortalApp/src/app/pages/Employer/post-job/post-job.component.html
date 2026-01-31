@@ -4,6 +4,37 @@
     <div class="fixed inset-0 bg-black/50 z-40 lg:hidden" (click)="closeMobileMenu()"></div>
     }
 
+    <!-- Toast Notification -->
+    @if (toast().visible) {
+    <div @toastSlide class="fixed top-6 right-6 z-50">
+        <div class="flex items-center gap-3 px-5 py-4 rounded-xl shadow-lg border"
+            [class.bg-green-50]="toast().type === 'success'" [class.border-green-200]="toast().type === 'success'"
+            [class.bg-red-50]="toast().type === 'error'" [class.border-red-200]="toast().type === 'error'"
+            [class.bg-blue-50]="toast().type === 'info'" [class.border-blue-200]="toast().type === 'info'">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center"
+                [class.bg-green-500]="toast().type === 'success'" [class.bg-red-500]="toast().type === 'error'"
+                [class.bg-blue-500]="toast().type === 'info'">
+                @if (toast().type === 'success') {
+                <lucide-icon [img]="CircleCheck" class="w-5 h-5 text-white"></lucide-icon>
+                } @else if (toast().type === 'error') {
+                <lucide-icon [img]="CircleX" class="w-5 h-5 text-white"></lucide-icon>
+                } @else {
+                <lucide-icon [img]="CircleX" class="w-5 h-5 text-white"></lucide-icon>
+                }
+            </div>
+            <p class="font-medium" [class.text-green-800]="toast().type === 'success'"
+                [class.text-red-800]="toast().type === 'error'" [class.text-blue-800]="toast().type === 'info'">
+                {{ toast().message }}
+            </p>
+            <button (click)="hideToast()" class="ml-2 p-1 rounded-lg hover:bg-white/50 transition-colors"
+                [class.text-green-600]="toast().type === 'success'" [class.text-red-600]="toast().type === 'error'"
+                [class.text-blue-600]="toast().type === 'info'">
+                <lucide-icon [img]="X" class="w-4 h-4"></lucide-icon>
+            </button>
+        </div>
+    </div>
+    }
+
     <!-- Sidebar - Hidden on mobile -->
     <aside class="w-64 bg-white border-r border-gray-200 flex-col fixed h-full z-50 hidden lg:flex">
         <!-- Logo -->
@@ -203,8 +234,11 @@
             <div @fadeInUp class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 max-w-3xl mx-auto">
                 <div class="flex items-center justify-between mb-8">
                     <div>
-                        <h2 class="text-2xl font-bold text-gray-900">Post a New Job</h2>
-                        <p class="text-gray-500 text-sm mt-1">Fill out the form below to create your job posting</p>
+                        <h2 class="text-2xl font-bold text-gray-900">{{ jobId() ? 'Edit Job' : 'Post a New Job' }}</h2>
+                        <p class="text-gray-500 text-sm mt-1">
+                            {{ jobId() ? 'Update the details of your job posting' : 'Fill out the form below to create
+                            your job posting' }}
+                        </p>
                     </div>
                     <button (click)="togglePreview()"
                         class="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium">
@@ -331,7 +365,7 @@
                     <button type="button" (click)="publishJob()"
                         class="w-full flex items-center justify-center gap-2 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium transition-colors">
                         <lucide-icon [img]="Send" class="w-5 text-white h-5"></lucide-icon>
-                        Publish Job
+                        {{ jobId() ? 'Update Job' : 'Publish Job' }}
                     </button>
                 </form>
             </div>

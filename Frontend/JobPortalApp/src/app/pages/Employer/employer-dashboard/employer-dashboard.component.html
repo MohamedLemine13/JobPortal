@@ -282,7 +282,8 @@
                         <div
                             class="flex items-center justify-between p-4 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer">
                             <div class="flex items-center gap-4">
-                                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center overflow-hidden">
+                                <div
+                                    class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center overflow-hidden">
                                     @if (app.avatar) {
                                     <img [src]="app.avatar" alt="{{ app.name }}" class="w-full h-full object-cover" />
                                     } @else {
@@ -328,3 +329,6 @@
         </div>
     </main>
 </div>
+
+<!-- Chatbot Widget -->
+<app-chatbot></app-chatbot>

@@ -1,145 +1,109 @@
-    <section class="flex items-center justify-center min-h-screen w-full bg-gray-50">
-        <div 
-            @fadeInUp
-            class="w-full max-w-md bg-white shadow-xl rounded-2xl p-8 mx-4"
-        >
-            <!-- Header -->
-            <header 
-                [@staggerFadeIn]="{ value: '', params: { delay: 100 } }"
-                class="text-center mb-8"
-            >
-                <h1 class="text-3xl font-bold text-gray-900">Welcome Back</h1>
-                <p class="text-gray-500 mt-2">Sign in to your JobPortal account</p>
-            </header>
+<section class="flex items-center justify-center min-h-screen w-full bg-gray-50">
+    <div @fadeInUp class="w-full max-w-md bg-white shadow-xl rounded-2xl p-8 mx-4">
+        <!-- Header -->
+        <header [@staggerFadeIn]="{ value: '', params: { delay: 100 } }" class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Welcome Back</h1>
+            <p class="text-gray-500 mt-2">Sign in to your JobPortal account</p>
+        </header>
 
-            <!-- Error Message -->
-            @if (errorMessage()) {
-                <div 
-                    class="mb-6 p-4 rounded-xl border transition-all duration-300"
-                    [class]="isLockoutError() 
+        <!-- Error Message -->
+        @if (showError() && errorMessage()) {
+        <div class="mb-6 p-4 rounded-xl border transition-all duration-300" [class]="isLockoutError() 
                         ? 'bg-red-50 border-red-200' 
                         : isAttemptsWarning() 
                             ? 'bg-amber-50 border-amber-200' 
-                            : 'bg-red-50 border-red-200'"
-                    [@errorSlideIn]
-                    [@shake]="shakeState()"
-                >
-                    <div class="flex items-start gap-3">
-                        <div [class]="isLockoutError() ? 'text-red-500' : isAttemptsWarning() ? 'text-amber-500' : 'text-red-500'">
-                            <lucide-icon [img]="AlertCircle" class="w-5 h-5 mt-0.5"></lucide-icon>
-                        </div>
-                        <div class="flex-1">
-                            <p [class]="isLockoutError() 
+                            : 'bg-red-50 border-red-200'" [@errorSlideIn] [@shake]="shakeState()">
+            <div class="flex items-start gap-3">
+                <div
+                    [class]="isLockoutError() ? 'text-red-500' : isAttemptsWarning() ? 'text-amber-500' : 'text-red-500'">
+                    <lucide-icon [img]="AlertCircle" class="w-5 h-5 mt-0.5"></lucide-icon>
+                </div>
+                <div class="flex-1">
+                    <p [class]="isLockoutError() 
                                 ? 'text-red-800 font-medium' 
                                 : isAttemptsWarning() 
                                     ? 'text-amber-800 font-medium' 
-                                    : 'text-red-800 font-medium'"
-                            >
-                                {{ errorMessage() }}
-                            </p>
-                            @if (isLockoutError()) {
-                                <p class="text-red-600 text-sm mt-1">Please wait before trying again.</p>
-                            }
-                            @if (isAttemptsWarning()) {
-                                <p class="text-amber-600 text-sm mt-1">Please check your password carefully.</p>
-                            }
-                            @if (!isLockoutError() && !isAttemptsWarning()) {
-                                <p class="text-red-600 text-sm mt-1">Please check your credentials and try again.</p>
-                            }
-                        </div>
-                        <button 
-                            type="button" 
-                            (click)="clearError()"
-                            class="text-gray-400 hover:text-gray-600 transition-colors"
-                        >
-                            <lucide-icon [img]="XCircle" class="w-5 h-5"></lucide-icon>
-                        </button>
-                    </div>
+                                    : 'text-red-800 font-medium'">
+                        {{ errorMessage() }}
+                    </p>
+                    @if (isLockoutError()) {
+                    <p class="text-red-600 text-sm mt-1">Please wait before trying again.</p>
+                    }
+                    @if (isAttemptsWarning()) {
+                    <p class="text-amber-600 text-sm mt-1">Please check your password carefully.</p>
+                    }
+                    @if (!isLockoutError() && !isAttemptsWarning()) {
+                    <p class="text-red-600 text-sm mt-1">Please check your credentials and try again.</p>
+                    }
                 </div>
-            }
+                <button type="button" (click)="clearError()"
+                    class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <lucide-icon [img]="XCircle" class="w-5 h-5"></lucide-icon>
+                </button>
+            </div>
+        </div>
+        }
 
-            <!-- Form -->
-            <form (ngSubmit)="onSubmit()" class="space-y-6">
-                <!-- Email Field -->
-                <div 
-                    [@staggerFadeIn]="{ value: '', params: { delay: 200 } }"
-                    class="flex flex-col gap-2"
-                >
-                    <label for="email" class="text-sm font-medium text-gray-700">Email Address</label>
-                    <div class="relative">
-                        <div class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                            <lucide-icon [img]="Mail" class="w-5 h-5"></lucide-icon>
-                        </div>
-                        <input 
-                            id="email" 
-                            type="email" 
-                            placeholder="Enter your email"
-                            [value]="email()"
-                            (input)="email.set($any($event.target).value)"
-                            class="w-full h-12 pl-11 pr-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:outline-none transition-all"
-                        />
+        <!-- Form -->
+        <form (ngSubmit)="onSubmit()" class="space-y-6">
+            <!-- Email Field -->
+            <div [@staggerFadeIn]="{ value: '', params: { delay: 200 } }" class="flex flex-col gap-2">
+                <label for="email" class="text-sm font-medium text-gray-700">Email Address</label>
+                <div class="relative">
+                    <div class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                        <lucide-icon [img]="Mail" class="w-5 h-5"></lucide-icon>
                     </div>
+                    <input id="email" type="email" placeholder="Enter your email" [value]="email()"
+                        (input)="email.set($any($event.target).value)"
+                        class="w-full h-12 pl-11 pr-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:outline-none transition-all" />
                 </div>
+            </div>
 
-                <!-- Password Field -->
-                <div 
-                    [@staggerFadeIn]="{ value: '', params: { delay: 300 } }"
-                    class="flex flex-col gap-2"
-                >
-                    <label for="password" class="text-sm font-medium text-gray-700">Password</label>
-                    <div class="relative">
-                        <div class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                            <lucide-icon [img]="Lock" class="w-5 h-5"></lucide-icon>
-                        </div>
-                        <input 
-                            id="password" 
-                            [type]="showPassword() ? 'text' : 'password'"
-                            placeholder="Enter your password"
-                            [value]="password()"
-                            (input)="password.set($any($event.target).value)"
-                            class="w-full h-12 pl-11 pr-12 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:outline-none transition-all"
-                        />
-                        <button 
-                            type="button"
-                            (click)="togglePasswordVisibility()"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                        >
-                            <lucide-icon [img]="showPassword() ? EyeOff : Eye" class="w-5 h-5"></lucide-icon>
-                        </button>
+            <!-- Password Field -->
+            <div [@staggerFadeIn]="{ value: '', params: { delay: 300 } }" class="flex flex-col gap-2">
+                <label for="password" class="text-sm font-medium text-gray-700">Password</label>
+                <div class="relative">
+                    <div class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                        <lucide-icon [img]="Lock" class="w-5 h-5"></lucide-icon>
                     </div>
-                </div>
-                
-                <!-- Submit Button -->
-                <div [@staggerFadeIn]="{ value: '', params: { delay: 400 } }">
-                    <button 
-                        type="submit"
-                        [disabled]="isLoading()"
-                        class="w-full h-12 bg-linear-to-r from-blue-600 to-purple-600 rounded-xl text-white font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 disabled:opacity-70 disabled:cursor-not-allowed"
-                    >
-                        @if (isLoading()) {
-                            <span class="flex items-center justify-center gap-2">
-                                <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                Signing in...
-                            </span>
-                        } @else {
-                            Sign In
-                        }
+                    <input id="password" [type]="showPassword() ? 'text' : 'password'" placeholder="Enter your password"
+                        [value]="password()" (input)="password.set($any($event.target).value)"
+                        class="w-full h-12 pl-11 pr-12 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:outline-none transition-all" />
+                    <button type="button" (click)="togglePasswordVisibility()"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                        <lucide-icon [img]="showPassword() ? EyeOff : Eye" class="w-5 h-5"></lucide-icon>
                     </button>
                 </div>
-            </form>
+            </div>
 
-            <!-- Footer -->
-            <p 
-                [@staggerFadeIn]="{ value: '', params: { delay: 500 } }"
-                class="text-center text-gray-500 mt-8"
-            >
-                Don't have an account? 
-                <a routerLink="/signup" class="text-blue-600 hover:text-blue-700 font-medium transition-colors">
-                    Create one here
-                </a>
-            </p>
-        </div>
-    </section>
+            <!-- Submit Button -->
+            <div [@staggerFadeIn]="{ value: '', params: { delay: 400 } }">
+                <button type="submit" [disabled]="isLoading()"
+                    class="w-full h-12 bg-linear-to-r from-blue-600 to-purple-600 rounded-xl text-white font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 disabled:opacity-70 disabled:cursor-not-allowed">
+                    @if (isLoading()) {
+                    <span class="flex items-center justify-center gap-2">
+                        <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"
+                                fill="none"></circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
+                        Signing in...
+                    </span>
+                    } @else {
+                    Sign In
+                    }
+                </button>
+            </div>
+        </form>
+
+        <!-- Footer -->
+        <p [@staggerFadeIn]="{ value: '', params: { delay: 500 } }" class="text-center text-gray-500 mt-8">
+            Don't have an account?
+            <a routerLink="/signup" class="text-blue-600 hover:text-blue-700 font-medium transition-colors">
+                Create one here
+            </a>
+        </p>
+    </div>
+</section>

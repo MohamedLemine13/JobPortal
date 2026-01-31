@@ -297,7 +297,7 @@ export class ManageJobsComponent implements OnInit {
 
   editJob(jobId: string) {
     console.log('Edit job:', jobId);
-    // TODO: Navigate to edit job page or open modal
+    this.router.navigate(['/employer-dashbord/post-job'], { queryParams: { id: jobId } });
   }
 
   closeJob(jobId: string) {

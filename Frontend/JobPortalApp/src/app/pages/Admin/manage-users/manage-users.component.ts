@@ -1,10 +1,10 @@
 import { Component, signal, OnInit } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { trigger, transition, style, animate } from '@angular/animations';
-import { 
-  LucideAngularModule, 
-  Briefcase, 
-  LayoutDashboard, 
+import {
+  LucideAngularModule,
+  Briefcase,
+  LayoutDashboard,
   Users,
   FileText,
   LogOut,
@@ -18,7 +18,8 @@ import {
   CheckCircle,
   XCircle,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  AlertTriangle
 } from 'lucide-angular';
 import { AuthService } from '../../../services/auth.service';
 import { AdminService } from '../../../services/admin.service';
@@ -50,10 +51,10 @@ import { FormsModule } from '@angular/forms';
 export class ManageUsersComponent implements OnInit {
 
   constructor(
-    private authService: AuthService, 
+    private authService: AuthService,
     private router: Router,
     private adminService: AdminService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     if (!this.authService.getToken()) {
@@ -80,6 +81,7 @@ export class ManageUsersComponent implements OnInit {
   readonly XCircle = XCircle;
   readonly ChevronLeft = ChevronLeft;
   readonly ChevronRight = ChevronRight;
+  readonly AlertTriangle = AlertTriangle;
 
 
   // Mobile menu state
@@ -106,23 +108,27 @@ export class ManageUsersComponent implements OnInit {
   isLoading = signal(false);
   searchQuery = signal('');
   roleFilter = signal('');
-  
+
   // Pagination
   currentPage = signal(0);
   totalPages = signal(0);
   totalElements = signal(0);
   pageSize = 10;
 
+  // Delete confirmation modal
+  showDeleteModal = signal(false);
+  userToDelete = signal<any>(null);
+
   fetchUsers() {
     this.isLoading.set(true);
     const role = this.roleFilter() || undefined;
-    
+
     this.adminService.getAllUsers(this.currentPage(), this.pageSize, role).subscribe({
       next: (response: any) => {
         console.log('Users response:', response);
         const data = response.data || response;
         const usersList = data.content || [];
-        
+
         this.users.set(usersList.map((u: any) => ({
           id: u.id,
           email: u.email,
@@ -132,7 +138,7 @@ export class ManageUsersComponent implements OnInit {
           createdAt: u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A',
           initials: (u.fullName || u.companyName || u.email).charAt(0).toUpperCase()
         })));
-        
+
         this.totalPages.set(data.totalPages || 1);
         this.totalElements.set(data.totalElements || usersList.length);
         this.isLoading.set(false);
@@ -164,15 +170,45 @@ export class ManageUsersComponent implements OnInit {
     }
   }
 
-  deleteUser(userId: string) {
-    if (confirm('Are you sure you want to delete this user?')) {
-      this.adminService.deleteUser(userId).subscribe({
-        next: () => {
+  openDeleteModal(user: any) {
+    this.userToDelete.set(user);
+    this.showDeleteModal.set(true);
+  }
+
+  cancelDelete() {
+    this.showDeleteModal.set(false);
+    this.userToDelete.set(null);
+  }
+
+  confirmDelete() {
+    const user = this.userToDelete();
+    if (!user) return;
+
+    this.adminService.deleteUser(user.id).subscribe({
+      next: () => {
+        // Immediately remove user from local array for instant UI update
+        this.users.update(users => users.filter(u => u.id !== user.id));
+        this.totalElements.update(t => t - 1);
+
+        // Recalculate total pages
+        const newTotalPages = Math.ceil(this.totalElements() / this.pageSize);
+        this.totalPages.set(newTotalPages > 0 ? newTotalPages : 1);
+
+        // If current page is now empty and not the first page, go to previous page
+        if (this.users().length === 0 && this.currentPage() > 0) {
+          this.currentPage.update(p => p - 1);
           this.fetchUsers();
-        },
-        error: (err) => console.error('Failed to delete user', err)
-      });
-    }
+        }
+
+        this.showDeleteModal.set(false);
+        this.userToDelete.set(null);
+      },
+      error: (err) => {
+        console.error('Failed to delete user', err);
+        this.showDeleteModal.set(false);
+        this.userToDelete.set(null);
+      }
+    });
   }
 
   toggleVerification(userId: string) {

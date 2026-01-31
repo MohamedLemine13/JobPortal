@@ -1,0 +1,24 @@
+# FastAPI and server
+fastapi>=0.104.0
+uvicorn>=0.24.0
+pydantic>=2.0.0
+
+# LangChain and embeddings
+langchain>=0.1.0
+langchain-huggingface>=0.0.1
+langchain-chroma>=0.1.0
+langchain-community>=0.0.10
+
+# Vector store
+chromadb>=0.4.0
+
+# Embeddings
+sentence-transformers>=2.2.0
+
+# HTTP requests (for Ollama)
+requests>=2.31.0
+
+# Document loaders
+pypdf>=3.0.0
+python-docx>=1.0.0
+unstructured>=0.10.0

@@ -1,5 +1,5 @@
 import { Component, signal, computed, OnInit } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, ActivatedRoute } from '@angular/router';
 import { trigger, transition, style, animate } from '@angular/animations';
 import {
   LucideAngularModule,
@@ -103,11 +103,20 @@ export class PostJobComponent implements OnInit {
   // Success modal state
   isSuccessModalOpen = signal(false);
   publishedJobTitle = signal('');
+  jobId = signal<string | null>(null);
+
+  // Toast notification
+  toast = signal<{ message: string; type: 'success' | 'error' | 'info'; visible: boolean }>({
+    message: '',
+    type: 'success',
+    visible: false
+  });
 
   constructor(
     private jobService: JobService,
     private authService: AuthService,
     private router: Router,
+    private route: ActivatedRoute,
     private profileService: ProfileService
   ) { }
 
@@ -130,6 +139,43 @@ export class PostJobComponent implements OnInit {
         }));
       }
     });
+
+    // Check for edit mode
+    this.route.queryParams.subscribe(params => {
+      if (params['id']) {
+        this.jobId.set(params['id']);
+        this.loadJobDetails(params['id']);
+      }
+    });
+
+  }
+
+  loadJobDetails(id: string) {
+    this.jobService.getJob(id).subscribe({
+      next: (response: any) => {
+        const data = response.data || response;
+        const job = data.job || data;
+
+        this.jobTitle.set(job.title);
+        this.location.set(job.location);
+        this.category.set(job.category);
+        this.jobType.set(this.formatJobTypeInverse(job.type));
+        this.description.set(job.description);
+        this.requirements.set(job.requirements ? job.requirements.join('\n') : '');
+        this.salaryMin.set(job.salaryMin);
+        this.salaryMax.set(job.salaryMax);
+      },
+      error: (err) => {
+        console.error('Failed to load job details', err);
+        this.showToast('Failed to load job details', 'error');
+      }
+    });
+  }
+
+  formatJobTypeInverse(type: string): string {
+    // Convert "FULL_TIME" back to "Full-Time" for matching select options
+    if (!type) return '';
+    return type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join('-');
   }
 
   loadUserProfile() {
@@ -260,27 +306,41 @@ export class PostJobComponent implements OnInit {
   publishJob() {
     // Validate required fields
     if (!this.jobTitle()) {
-      alert('Please enter a job title');
+      this.showToast('Please enter a job title', 'error');
       return;
     }
     if (!this.location()) {
-      alert('Please enter a location');
+      this.showToast('Please enter a location', 'error');
       return;
     }
     if (!this.category()) {
-      alert('Please select a category');
+      this.showToast('Please select a category', 'error');
       return;
     }
     if (!this.jobType()) {
-      alert('Please select a job type');
+      this.showToast('Please select a job type', 'error');
       return;
     }
     if (!this.description()) {
-      alert('Please description the job');
+      this.showToast('Please enter a job description', 'error');
       return;
     }
     if (!this.salaryMin() || !this.salaryMax()) {
-      alert('Please enter a valid salary range');
+      this.showToast('Please enter a valid salary range', 'error');
+      return;
+    }
+
+    // Numeric validation for salary
+    const minSal = parseInt(this.salaryMin());
+    const maxSal = parseInt(this.salaryMax());
+
+    if (isNaN(minSal) || isNaN(maxSal)) {
+      this.showToast('Salary must be a number', 'error');
+      return;
+    }
+
+    if (minSal >= maxSal) {
+      this.showToast('Minimum salary must be smaller than maximum salary', 'error');
       return;
     }
 
@@ -291,28 +351,55 @@ export class PostJobComponent implements OnInit {
       description: this.description(),
       requirements: this.requirements().split('\n').filter(r => r.trim().length > 0),
       skills: [], // Add skills field to form or defaults
-      salaryMin: parseInt(this.salaryMin()) || 0,
-      salaryMax: parseInt(this.salaryMax()) || 0,
+      salaryMin: minSal,
+      salaryMax: maxSal,
       salaryCurrency: 'USD',
       category: this.category()
     };
 
-    console.log('Publishing job:', request);
+    console.log(this.jobId() ? 'Updating job:' : 'Publishing job:', request);
 
-    this.jobService.createJob(request).subscribe({
-      next: (job) => {
-        this.publishedJobTitle.set(this.jobTitle());
-        this.isSuccessModalOpen.set(true);
-        // Auto-redirect after 3 seconds
-        setTimeout(() => {
-          this.closeSuccessAndNavigate();
-        }, 3000);
-      },
-      error: (err) => {
-        console.error('Failed to publish job', err);
-        alert('Failed to publish job. Please check your inputs and try again.');
-      }
-    });
+    if (this.jobId()) {
+      this.jobService.updateJob(this.jobId()!, request).subscribe({
+        next: (job) => {
+          this.publishedJobTitle.set(this.jobTitle());
+          this.showToast('Job updated successfully', 'success');
+          setTimeout(() => {
+            this.router.navigate(['/employer-dashbord/manage-jobs']);
+          }, 1500);
+        },
+        error: (err) => {
+          console.error('Failed to update job', err);
+          this.showToast('Failed to update job. Please check your inputs and try again.', 'error');
+        }
+      });
+    } else {
+      this.jobService.createJob(request).subscribe({
+        next: (job) => {
+          this.publishedJobTitle.set(this.jobTitle());
+          this.isSuccessModalOpen.set(true);
+          // Auto-redirect after 3 seconds
+          setTimeout(() => {
+            this.closeSuccessAndNavigate();
+          }, 3000);
+        },
+        error: (err) => {
+          console.error('Failed to publish job', err);
+          this.showToast('Failed to publish job. Please check your inputs and try again.', 'error');
+        }
+      });
+    }
+  }
+
+  showToast(message: string, type: 'success' | 'error' | 'info') {
+    this.toast.set({ message, type, visible: true });
+    setTimeout(() => {
+      this.hideToast();
+    }, 3000);
+  }
+
+  hideToast() {
+    this.toast.update(t => ({ ...t, visible: false }));
   }
 
   closeSuccessAndNavigate() {

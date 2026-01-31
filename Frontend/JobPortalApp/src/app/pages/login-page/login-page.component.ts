@@ -77,7 +77,7 @@ export class LoginPageComponent {
   // IMPORTANT: choose role (temporary default: jobseeker)
   role = signal<'employer' | 'job_seeker'>('job_seeker');
 
-  constructor(private router: Router, private authService: AuthService) {}
+  constructor(private router: Router, private authService: AuthService) { }
 
   togglePasswordVisibility() {
     this.showPassword.update(v => !v);
@@ -85,7 +85,7 @@ export class LoginPageComponent {
 
   clearError() {
     this.showError.set(false);
-    setTimeout(() => this.errorMessage.set(null), 300);
+    this.errorMessage.set(null);
   }
 
   onSubmit() {
@@ -118,11 +118,11 @@ export class LoginPageComponent {
         console.error('Error body:', err.error);
         console.error('Error status:', err.status);
         this.isLoading.set(false);
-        
+
         // Extract error message from response
         // API returns: { success: false, error: { code: "...", message: "..." } }
         let message = 'An error occurred. Please try again.';
-        
+
         if (err.error) {
           console.log('Parsing error response:', JSON.stringify(err.error));
           if (err.error.error?.message) {
@@ -133,7 +133,7 @@ export class LoginPageComponent {
             message = err.error;
           }
         }
-        
+
         console.log('Final error message:', message);
         this.errorMessage.set(message);
         this.showError.set(true);

@@ -26,6 +26,7 @@ public class AdminService {
     private final ApplicationRepository applicationRepository;
     private final JobSeekerProfileRepository jobSeekerProfileRepository;
     private final EmployerProfileRepository employerProfileRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
 
     /**
@@ -89,6 +90,18 @@ public class AdminService {
         // Prevent deleting admin users
         if (user.getRole() == UserRole.ADMIN) {
             throw new IllegalArgumentException("Cannot delete admin users");
+        }
+
+        // 1. Delete Refresh Tokens
+        refreshTokenRepository.deleteAllByUserId(userId);
+
+        // 2. Delete role-specific data (jobs or applications)
+        if (user.getRole() == UserRole.EMPLOYER) {
+            // Delete all jobs posted by this employer (applications cascade from jobs)
+            jobRepository.deleteByEmployerId(userId);
+        } else if (user.getRole() == UserRole.JOB_SEEKER) {
+            // Delete all applications made by this seeker
+            applicationRepository.deleteByApplicantId(userId);
         }
 
         userRepository.delete(user);

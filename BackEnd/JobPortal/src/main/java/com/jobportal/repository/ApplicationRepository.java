@@ -45,4 +45,7 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID> 
     // Find applications by employer (for all jobs posted by this employer)
     @Query("SELECT a FROM Application a WHERE a.job.employer.id = :employerId ORDER BY a.appliedAt DESC")
     Page<Application> findByEmployerId(@Param("employerId") UUID employerId, Pageable pageable);
+
+    // Delete applications by applicant
+    void deleteByApplicantId(UUID applicantId);
 }
